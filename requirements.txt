@@ -1,0 +1,15 @@
+cython
+wheel
+pytorch
+torchvision
+torchaudio
+numpy
+torch-scatter
+torch-sparse
+torch-geometric
+matplotlib
+tqdm
+pylint
+torchsummary
+webdataset
+pkbar
