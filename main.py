@@ -37,7 +37,7 @@ def main(gpu: int) -> None:
 
 
     dataset = Planetoid(root=DATA_PATH, name="Cora")
-    model = GCN(dataset.num_features, 16, dataset.num_classes)
+    model = GCN(dataset.num_features, 16, dataset.num_classes).to(device)
     train_model(model, dataset, 200, 32, device)
 
 
