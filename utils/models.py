@@ -1,5 +1,6 @@
 import torch
 from torch import Tensor
+import torch.nn.functional as F
 from torch_geometric.nn import GCNConv
 
 
@@ -15,4 +16,5 @@ class GCN(torch.nn.Module):
         # edge_index: Graph connectivity matrix of shape [2, num_edges]
         x = self.conv1(x, edge_index).relu()
         x = self.conv2(x, edge_index)
+        x = F.softmax(x, dim=-1)
         return x

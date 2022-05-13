@@ -4,6 +4,8 @@ from torch import nn
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
+from utils.datasets import gen_expr_data
+
 
 def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
     """
@@ -41,7 +43,7 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
-    data_loader = get_dataloader(dataset, batch_size=128)
+    #data_loader = get_dataloader(dataset, batch_size=batch_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -51,11 +53,12 @@ def train_model(model: torch.nn.Module,
         model.train()
         running_loss = 0.0
 
-        for batch_idx, data in enumerate(data_loader):
+        for batch_idx, data in enumerate(gen_expr_data()):
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
-            loss = loss_fn(prediction[data.train_mask], 
-                           data.y[data.train_mask])
+            print(prediction)
+            loss = loss_fn(prediction[data.train_mask], data.y)
+            print(prediction[data.train_mask], data.y)
             
             # Backpropagation
             optimizer.zero_grad()
@@ -65,3 +68,4 @@ def train_model(model: torch.nn.Module,
             # accuray calculation
             running_loss += loss.item()
             print(f"Epoch: {epoch} | Batch: {batch_idx+1} | Loss: {loss.item()}", end="\r")
+            break

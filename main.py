@@ -12,6 +12,7 @@ from torch_geometric.datasets import Planetoid
 
 from utils.models import GCN
 from utils.training import train_model
+from utils.datasets import gen_expr_data
 
 torch.backends.cudnn.benchmark = True
 
@@ -36,9 +37,9 @@ def main(gpu: int) -> None:
     print()
 
 
-    dataset = Planetoid(root=DATA_PATH, name="Cora")
-    model = GCN(dataset.num_features, 16, dataset.num_classes).to(device)
-    train_model(model, dataset, 200, 32, device)
+    temp_data = next(gen_expr_data())
+    model = GCN(temp_data.num_features, 16, temp_data.num_classes).to(device)
+    train_model(model, None, 200, 32, device)
 
 
     end = time.perf_counter()
