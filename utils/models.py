@@ -18,3 +18,16 @@ class GCN(torch.nn.Module):
         x = self.conv2(x, edge_index)
         x = F.softmax(x, dim=-1)
         return x
+
+
+class CustomCrossEntropy(torch.nn.Module):
+    """https://discuss.pytorch.org/t/how-should-i-implement-cross-entropy-loss-with-continuous-target-outputs/10720
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, prediction: float, target: float) -> float:
+        """forward method to calculate the loss for a given prediction and soft_targets"""
+        log_probs = F.log_softmax(prediction, dim=-1)
+        return torch.mean(torch.sum(-target * log_probs, -1))

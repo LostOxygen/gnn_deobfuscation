@@ -33,6 +33,6 @@ def gen_expr_data() -> Data:
 
         data.train_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
         data.test_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
-        data.num_classes = torch.tensor([len(operations_list)], dtype=torch.long)
+        data.num_classes = len(operations_list)
         
         yield data

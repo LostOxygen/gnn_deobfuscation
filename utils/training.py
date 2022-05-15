@@ -5,6 +5,7 @@ from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
 from utils.datasets import gen_expr_data
+from .models import CustomCrossEntropy
 
 
 def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
@@ -45,7 +46,7 @@ def train_model(model: torch.nn.Module,
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = CustomCrossEntropy()
 
     print("\n[[ Training ]]")
 
@@ -56,9 +57,7 @@ def train_model(model: torch.nn.Module,
         for batch_idx, data in enumerate(gen_expr_data()):
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
-            print(prediction)
             loss = loss_fn(prediction[data.train_mask], data.y)
-            print(prediction[data.train_mask], data.y)
             
             # Backpropagation
             optimizer.zero_grad()
@@ -69,3 +68,32 @@ def train_model(model: torch.nn.Module,
             running_loss += loss.item()
             print(f"Epoch: {epoch} | Batch: {batch_idx+1} | Loss: {loss.item()}", end="\r")
             break
+
+
+    print("\n\n[[ Testing ]]")
+    model.eval()
+    true_preds = 0
+    total_preds = 0
+
+    with torch.no_grad():
+        for batch_idx, data in enumerate(gen_expr_data()):
+            total_preds += 1
+            data = data.to(device)
+            prediction = model(data.x, data.edge_index)
+            prediced_op = prediction[data.test_mask].argmax()
+            true_op = int(data.y.item())
+
+            if prediced_op == true_op:
+                true_preds += 1
+                print(f"✓ correct -> Pred: {prediced_op} | Real: {true_op}")
+            else:
+                print(f"× incorrect -> Pred: {prediced_op} | Real: {true_op}")
+
+            
+
+            if batch_idx >= 10:
+                break
+
+    print(f"\n[ test results ]\n"
+          f"{true_preds}/{total_preds} correct predictions\n"
+          f"{(true_preds/total_preds)*100}% accuracy\n")
