@@ -10,7 +10,7 @@ import torch
 import numpy as np
 from torch_geometric.datasets import Planetoid
 
-from utils.models import GCN
+from utils.models import GNN
 from utils.training import train_model
 from utils.datasets import gen_expr_data
 
@@ -37,9 +37,9 @@ def main(gpu: int) -> None:
     print()
 
 
-    temp_data = next(gen_expr_data())
-    model = GCN(temp_data.num_features, 16, temp_data.num_classes).to(device)
-    train_model(model, None, 1000, 32, device)
+    temp_data = next(gen_expr_data(32))
+    model = GNN(temp_data.num_features, 8, temp_data.num_classes).to(device)
+    train_model(model, None, 1000, 1, device)
 
 
     end = time.perf_counter()

@@ -1,6 +1,7 @@
 """libary for training functions and modularity"""
 import torch
 from torch import nn
+import numpy as np
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
@@ -46,7 +47,7 @@ def train_model(model: torch.nn.Module,
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    loss_fn = CustomCrossEntropy()
+    loss_fn = nn.CrossEntropyLoss()
 
     print("\n[[ Training ]]")
 
@@ -54,20 +55,18 @@ def train_model(model: torch.nn.Module,
         model.train()
         running_loss = 0.0
 
-        for batch_idx, data in enumerate(gen_expr_data()):
-            data = data.to(device)
-            prediction = model(data.x, data.edge_index)
-            loss = loss_fn(prediction[data.train_mask], data.y)
-            
-            # Backpropagation
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        data = next(gen_expr_data(batch_size)).to(device)
+        prediction = model(data.x, data.edge_index)
+        loss = loss_fn(prediction[data.train_mask], data.y[data.train_mask])
+ 
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-            # accuray calculation
-            running_loss += loss.item()
-            print(f"Epoch: {epoch} | Batch: {batch_idx+1} | Loss: {loss.item()}", end="\r")
-            break
+        # accuray calculation
+        running_loss += loss.item()
+        print(f"Epoch: {epoch} | Loss: {loss.item()}", end="\r")
 
 
     print("\n\n[[ Testing ]]")
@@ -76,12 +75,13 @@ def train_model(model: torch.nn.Module,
     total_preds = 0
 
     with torch.no_grad():
-        for batch_idx, data in enumerate(gen_expr_data()):
+        for _ in range(10):
             total_preds += 1
+            data = next(gen_expr_data(1)).to(device)
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
             prediced_op = prediction[data.test_mask].argmax()
-            true_op = int(data.y.item())
+            true_op = int(data.y[data.test_mask].item())
 
             if prediced_op == true_op:
                 true_preds += 1
@@ -89,11 +89,7 @@ def train_model(model: torch.nn.Module,
             else:
                 print(f"× incorrect -> Pred: {prediced_op} | Real: {true_op}")
 
-            
-
-            if batch_idx >= 10:
-                break
 
     print(f"\n[ test results ]\n"
           f"{true_preds}/{total_preds} correct predictions\n"
-          f"{(true_preds/total_preds)*100}% accuracy\n")
+          f"{np.round((true_preds/total_preds)*100, 2)}% accuracy\n")
