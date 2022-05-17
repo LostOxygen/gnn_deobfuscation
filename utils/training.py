@@ -26,7 +26,6 @@ def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
 def train_model(model: torch.nn.Module,
                 dataset: InMemoryDataset,
                 epochs: int,
-                batch_size: int,
                 device: str) -> None:
     """
     Helper function to train a given model on a given datasetmodel
@@ -35,7 +34,6 @@ def train_model(model: torch.nn.Module,
         model: the model which should be trained
         dataset: the dataset on which the model should be trained
         epochs: number of training epochs
-        batch_size: batch size of the dataloader
         device: device string
     
     Returns:
@@ -55,9 +53,9 @@ def train_model(model: torch.nn.Module,
         model.train()
         running_loss = 0.0
 
-        data = next(gen_expr_data(batch_size)).to(device)
+        data = next(gen_expr_data()).to(device)
         prediction = model(data.x, data.edge_index)
-        loss = loss_fn(prediction[data.train_mask], data.y[data.train_mask])
+        loss = loss_fn(prediction, data.y)
  
         # Backpropagation
         optimizer.zero_grad()
@@ -66,7 +64,7 @@ def train_model(model: torch.nn.Module,
 
         # accuray calculation
         running_loss += loss.item()
-        print(f"Epoch: {epoch} | Loss: {loss.item()}", end="\r")
+        print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1)}", end="\r")
 
 
     print("\n\n[[ Testing ]]")
@@ -75,17 +73,18 @@ def train_model(model: torch.nn.Module,
     total_preds = 0
 
     with torch.no_grad():
-        for _ in range(10):
+        for _ in range(100):
             total_preds += 1
-            data = next(gen_expr_data(1)).to(device)
+            data = next(gen_expr_data()).to(device)
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
-            prediced_op = prediction[data.test_mask].argmax()
-            true_op = int(data.y[data.test_mask].item())
+
+            prediced_op = prediction.argmax()
+            true_op = int(data.y.item())
 
             if prediced_op == true_op:
                 true_preds += 1
-                print(f"✓ correct -> Pred: {prediced_op} | Real: {true_op}")
+                print(f"✓ correct   -> Pred: {prediced_op} | Real: {true_op}")
             else:
                 print(f"× incorrect -> Pred: {prediced_op} | Real: {true_op}")
 

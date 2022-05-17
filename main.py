@@ -23,10 +23,11 @@ def main(gpu: int) -> None:
     """main function for lda stability testing"""
     start = time.perf_counter()
 
-    if gpu == 0:
-        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-    if gpu == 1:
-        device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+    device = "cpu"
+    # if gpu == 0:
+    #     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    # if gpu == 1:
+    #     device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
     print("\n\n\n"+"#"*55)
     print("## " + str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
@@ -37,9 +38,9 @@ def main(gpu: int) -> None:
     print()
 
 
-    temp_data = next(gen_expr_data(32))
-    model = GNN(temp_data.num_features, 8, temp_data.num_classes).to(device)
-    train_model(model, None, 1000, 1, device)
+    temp_data = next(gen_expr_data())
+    model = GNN(temp_data.num_features, 32, temp_data.num_classes).to(device)
+    train_model(model, None, 1000, device)
 
 
     end = time.perf_counter()
