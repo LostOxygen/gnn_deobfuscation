@@ -6,7 +6,6 @@ from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
 from utils.datasets import gen_expr_data
-from .models import CustomCrossEntropy
 
 
 def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
@@ -24,7 +23,6 @@ def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
 
 
 def train_model(model: torch.nn.Module,
-                dataset: InMemoryDataset,
                 epochs: int,
                 device: str) -> None:
     """
@@ -46,16 +44,17 @@ def train_model(model: torch.nn.Module,
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     loss_fn = nn.CrossEntropyLoss()
+    running_loss = 0.0
 
     print("\n[[ Training ]]")
 
     for epoch in range(epochs):
         model.train()
-        running_loss = 0.0
 
         data = next(gen_expr_data()).to(device)
         prediction = model(data.x, data.edge_index)
-        loss = loss_fn(prediction, data.y)
+        loss = loss_fn(torch.unsqueeze(prediction, dim=0), data.y)
+       # print(loss.item())
  
         # Backpropagation
         optimizer.zero_grad()
