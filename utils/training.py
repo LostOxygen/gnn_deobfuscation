@@ -63,7 +63,7 @@ def train_model(model: torch.nn.Module,
 
         # accuray calculation
         running_loss += loss.item()
-        print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1)}", end="\r")
+        print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
 
 
     print("\n\n[[ Testing ]]")

@@ -29,18 +29,19 @@ def main(gpu: int) -> None:
     # if gpu == 1:
     #     device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
-    print("\n\n\n"+"#"*55)
+    print("\n\n\n"+"#"*75)
     print("## " + str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
     print(f"## System: {torch.get_num_threads()} CPU cores with "
           f"{os.cpu_count()} threads and "
           f"{torch.cuda.device_count()} GPUs on {socket.gethostname()}")
-    print("#"*55)
+    print(f"## Using: {device}")
+    print("#"*75)
     print()
 
 
     temp_data = next(gen_expr_data())
     model = GNN(temp_data.num_features, temp_data.num_classes).to(device)
-    train_model(model, 100000, device)
+    train_model(model, 10000, device)
 
 
     end = time.perf_counter()

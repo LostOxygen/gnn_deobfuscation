@@ -10,10 +10,11 @@ class GNN(torch.nn.Module):
     """Graph neural network"""
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
-        self.conv1 = SAGEConv(in_channels, 256, normalize=True)
-        self.conv2 = SAGEConv(256, 128, normalize=True)
-        self.conv3 = SAGEConv(128, 64, normalize=True)
-        self.fc = nn.Linear(3*64, out_channels)
+        self.conv1 = SAGEConv(in_channels, 512, normalize=True)
+        self.conv2 = SAGEConv(512, 256, normalize=True)
+        self.conv3 = SAGEConv(256, 128, normalize=True)
+        self.fc = nn.Linear(4*128, out_channels)
+
 
 
     def forward(self, x: Tensor, edge_index: Tensor) -> Tensor:
