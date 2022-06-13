@@ -3,6 +3,18 @@ from typing import Iterator
 import torch
 from torch_geometric.data import Data
 
+operation_dict = {
+    0: "add",
+    1: "sub",
+    2: "mul",
+    3: "div",
+    4: "and",
+    5: "or",
+    6: "xor",
+    7: "shl",
+    8: "shr",
+    # 9: "not",
+}
 
 def gen_expr_data() -> Iterator[Data]:
     """
@@ -14,9 +26,9 @@ def gen_expr_data() -> Iterator[Data]:
     4: logical and
     5: logical or
     6: logical xor
-    7: logical not
-    8: logical shift left
-    9: logical shift right
+    7: logical shift left
+    8: logical shift right
+    9: logical not
 
     Paramters:
         None
@@ -24,7 +36,7 @@ def gen_expr_data() -> Iterator[Data]:
     Returns:
         Data object for the given dataset
     """
-    operations_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  
+
     edge_index = torch.tensor([
             [0, 1],
             [1, 3],
@@ -35,26 +47,27 @@ def gen_expr_data() -> Iterator[Data]:
         train_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
         test_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
 
-        x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.float)
-        y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.float)
+        x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
+        y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
 
-        chosen_operation = operations_list[torch.randint(0, len(operations_list), (1,))]
+        chosen_operation = torch.randint(0, len(operation_dict), (1,)).item()
+
         match chosen_operation:
             case 0: z_val = x_val + y_val
             case 1: z_val = x_val - y_val
             case 2: z_val = x_val * y_val
             case 3:
                 if y_val == 0:
-                    y_val += 1e-8
+                    y_val += 1
                 z_val = x_val / y_val
             case 4: z_val = x_val & y_val
             case 5: z_val = x_val | y_val
             case 6: z_val = x_val ^ y_val
-            case 7: 
+            case 7: z_val = x_val << y_val
+            case 8: z_val = x_val >> y_val
+            case 9:
                 z_val = ~x_val
                 y_val = 0
-            case 8: z_val = x_val << y_val
-            case 9: z_val = x_val >> y_val
 
         x = torch.tensor([[x_val], [0.], [y_val], [z_val]], dtype=torch.float)
         y = torch.tensor([chosen_operation], dtype=torch.long)
@@ -63,6 +76,6 @@ def gen_expr_data() -> Iterator[Data]:
         data = Data(x=x, y=y, edge_index=edge_index)
         data.train_mask = train_mask
         data.test_mask = test_mask
-        data.num_classes = len(operations_list)
+        data.num_classes = len(operation_dict)
 
         yield data

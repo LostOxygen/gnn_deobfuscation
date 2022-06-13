@@ -5,7 +5,7 @@ import numpy as np
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
-from utils.datasets import gen_expr_data
+from utils.datasets import gen_expr_data, operation_dict
 
 
 def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
@@ -42,7 +42,7 @@ def train_model(model: torch.nn.Module,
     print(model)
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_fn = nn.CrossEntropyLoss()
     running_loss = 0.0
 
@@ -54,7 +54,6 @@ def train_model(model: torch.nn.Module,
         data = next(gen_expr_data()).to(device)
         prediction = model(data.x, data.edge_index)
         loss = loss_fn(torch.unsqueeze(prediction, dim=0), data.y)
-       # print(loss.item())
  
         # Backpropagation
         optimizer.zero_grad()
@@ -78,14 +77,16 @@ def train_model(model: torch.nn.Module,
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
 
-            prediced_op = prediction.argmax()
+            prediced_op = prediction.argmax().item()
             true_op = int(data.y.item())
 
             if prediced_op == true_op:
                 true_preds += 1
-                print(f"✓ correct   -> Pred: {prediced_op} | Real: {true_op}")
+                print(f"✓ correct   -> Pred: {operation_dict[prediced_op]} | "\
+                      f"Real: {operation_dict[true_op]}")
             else:
-                print(f"× incorrect -> Pred: {prediced_op} | Real: {true_op}")
+                print(f"× incorrect -> Pred: {operation_dict[prediced_op]} | "\
+                      f"Real: {operation_dict[true_op]}")
 
 
     print(f"\n[ test results ]\n"

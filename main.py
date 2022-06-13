@@ -41,7 +41,7 @@ def main(gpu: int) -> None:
 
     temp_data = next(gen_expr_data())
     model = GNN(temp_data.num_features, temp_data.num_classes).to(device)
-    train_model(model, 10000, device)
+    train_model(model, 100000, device)
 
 
     end = time.perf_counter()
