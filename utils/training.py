@@ -51,6 +51,7 @@ def train_model(model: torch.nn.Module,
     epoch = 0
     model.train()
     for x, y, edge_index in data_loader:
+        if epoch >= epochs: break
         x, y = x.to(device), y.to(device)
         edge_index = edge_index[0].to(device)
         
