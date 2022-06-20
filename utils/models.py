@@ -10,11 +10,11 @@ class GNN(torch.nn.Module):
     """Graph neural network"""
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
-        self.conv1 = GCNConv(in_channels, 1024, normalize=True)
-        self.conv2 = SAGEConv(1024, 512, normalize=True)
-        self.conv3 = SAGEConv(512, 256, normalize=True)
-        self.conv4 = SAGEConv(256, 256, normalize=True)
-        # self.conv5 = SAGEConv(128, 128, normalize=True)
+        self.conv1 = GCNConv(in_channels, 1024, normalize=True, node_dim=1)
+        self.conv2 = SAGEConv(1024, 512, normalize=True, node_dim=1)
+        self.conv3 = SAGEConv(512, 256, normalize=True, node_dim=1)
+        self.conv4 = SAGEConv(256, 256, normalize=True, node_dim=1)
+        # self.conv5 = SAGEConv(128, 128, normalize=True, node_dim=1)
         self.fc = nn.Linear(4*256, out_channels)
         # self.fc2 = nn.Linear(512, out_channels)
 
@@ -28,7 +28,7 @@ class GNN(torch.nn.Module):
         x = self.conv3(x, edge_index).relu()
         x = self.conv4(x, edge_index).relu()
         # x = self.conv5(x, edge_index).relu()
-        x = x.flatten()
+        x = x.view(x.size(0), -1)  # flatten with batch dimension
         x = self.fc(x)
         # x = self.fc2(x).relu()
         x = F.softmax(x, dim=-1)

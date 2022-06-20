@@ -2,24 +2,24 @@
 import torch
 from torch import nn
 import numpy as np
-from torch_geometric.data import InMemoryDataset
+from torch.utils.data import Dataset
 from torch_geometric.loader import DataLoader
 
-from utils.datasets import gen_expr_data, operation_dict
+from utils.datasets import gen_expr_data, operation_dict, IOSamplesDataset
 
 
-def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
+def get_dataloader(batch_size: int) -> DataLoader:
     """
     Helper function to get a dataloader for a given dataset
     
     Parameters:
-        dataset: the dataset for which a dataloader should be created
         batch_size: the batch size of the dataloader
 
     Returns:
         A dataloader for the given dataset
     """
-    return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    dataset = IOSamplesDataset()
+    return DataLoader(dataset, batch_size=batch_size, num_workers=4)
 
 
 def train_model(model: torch.nn.Module,
@@ -41,19 +41,21 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
-    #data_loader = get_dataloader(dataset, batch_size=batch_size)
+    data_loader = get_dataloader(batch_size=32)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_fn = nn.CrossEntropyLoss()
     running_loss = 0.0
 
     print("\n[[ Training ]]")
 
-    for epoch in range(epochs):
-        model.train()
-
-        data = next(gen_expr_data()).to(device)
-        prediction = model(data.x, data.edge_index)
-        loss = loss_fn(torch.unsqueeze(prediction, dim=0), data.y)
+    epoch = 0
+    model.train()
+    for x, y, edge_index in data_loader:
+        x, y = x.to(device), y.to(device)
+        edge_index = edge_index[0].to(device)
+        
+        prediction = model(x, edge_index)
+        loss = loss_fn(prediction, y)
  
         # Backpropagation
         optimizer.zero_grad()
@@ -63,7 +65,7 @@ def train_model(model: torch.nn.Module,
         # accuray calculation
         running_loss += loss.item()
         print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
-
+        epoch += 1
 
     print("\n\n[[ Testing ]]")
     model.eval()
