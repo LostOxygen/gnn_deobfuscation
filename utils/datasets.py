@@ -27,12 +27,16 @@ class IOSamplesDataset(torch.utils.data.Dataset):
                                 [1, 3],
                                 [2, 1]],
                                 dtype=torch.long).t().contiguous()
+        self.num_classes = len(operation_dict)
+        self.num_features = 1
+        self.train_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
+        self.test_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
     
     def __getitem__(self, idx):
         x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
         y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
 
-        chosen_operation = torch.randint(0, len(operation_dict), (1,)).item()
+        chosen_operation = torch.randint(0, self.num_classes, (1,)).item()
         match chosen_operation:
             case 0: z_val = x_val + y_val
             case 1: z_val = x_val - y_val
@@ -87,8 +91,7 @@ def gen_expr_data() -> Iterator[Data]:
     ).t().contiguous()
 
     while True:
-        train_mask = torch.tensor(
-            [False, True, False, False], dtype=torch.bool)
+        train_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
         test_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
 
         x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)

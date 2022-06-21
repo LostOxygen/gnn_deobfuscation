@@ -8,11 +8,10 @@ import argparse
 import os
 import torch
 import numpy as np
-from torch_geometric.datasets import Planetoid
 
 from utils.models import GNN
 from utils.training import train_model
-from utils.datasets import gen_expr_data
+from utils.datasets import IOSamplesDataset
 
 torch.backends.cudnn.benchmark = True
 
@@ -24,10 +23,10 @@ def main(gpu: int) -> None:
     start = time.perf_counter()
 
     device = "cpu"
-    # if gpu == 0:
-    #     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-    # if gpu == 1:
-    #     device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+    if gpu == 0:
+        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    if gpu == 1:
+        device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
     print("\n\n\n"+"#"*75)
     print("## " + str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
@@ -38,10 +37,8 @@ def main(gpu: int) -> None:
     print("#"*75)
     print()
 
-
-    temp_data = next(gen_expr_data())
-    model = GNN(temp_data.num_features, temp_data.num_classes).to(device)
-    train_model(model, 100000, device)
+    model = GNN(IOSamplesDataset().num_features, IOSamplesDataset().num_classes).to(device)
+    train_model(model, 10000, device)
 
 
     end = time.perf_counter()

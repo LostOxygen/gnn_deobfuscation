@@ -19,7 +19,9 @@ def get_dataloader(batch_size: int) -> DataLoader:
         A dataloader for the given dataset
     """
     dataset = IOSamplesDataset()
-    return DataLoader(dataset, batch_size=batch_size, num_workers=4)
+    train_loader = DataLoader(dataset, batch_size=batch_size, num_workers=4)
+    test_loader = DataLoader(dataset, batch_size=1, num_workers=1)
+    return train_loader, test_loader
 
 
 def train_model(model: torch.nn.Module,
@@ -41,16 +43,15 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
-    data_loader = get_dataloader(batch_size=32)
+    data_loader, test_loader = get_dataloader(batch_size=32)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_fn = nn.CrossEntropyLoss()
     running_loss = 0.0
 
     print("\n[[ Training ]]")
 
-    epoch = 0
     model.train()
-    for x, y, edge_index in data_loader:
+    for epoch, (x, y, edge_index) in enumerate(data_loader):
         if epoch >= epochs: break
         x, y = x.to(device), y.to(device)
         edge_index = edge_index[0].to(device)
@@ -66,30 +67,28 @@ def train_model(model: torch.nn.Module,
         # accuray calculation
         running_loss += loss.item()
         print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
-        epoch += 1
 
     print("\n\n[[ Testing ]]")
+    model = model.to("cpu")
     model.eval()
     true_preds = 0
     total_preds = 0
 
     with torch.no_grad():
-        for _ in range(100):
+        for epoch, (x, y, edge_index) in enumerate(test_loader):
             total_preds += 1
-            data = next(gen_expr_data()).to(device)
-            data = data.to(device)
-            prediction = model(data.x, data.edge_index)
-
+            if epoch >= 99:
+                break
+            prediction = model(x, edge_index[0])
             prediced_op = prediction.argmax().item()
-            true_op = int(data.y.item())
 
-            if prediced_op == true_op:
+            if prediced_op == y.item():
                 true_preds += 1
                 print(f"✓ correct   -> Pred: {operation_dict[prediced_op]} | "\
-                      f"Real: {operation_dict[true_op]}")
+                      f"Real: {operation_dict[y.item()]}")
             else:
                 print(f"× incorrect -> Pred: {operation_dict[prediced_op]} | "\
-                      f"Real: {operation_dict[true_op]}")
+                      f"Real: {operation_dict[y.item()]}")
 
 
     print(f"\n[ test results ]\n"
