@@ -32,7 +32,7 @@ class IOSamplesDataset(torch.utils.data.Dataset):
         self.train_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
         self.test_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
     
-    def __getitem__(self, idx):
+    def __getitem__(self, idx): # pylint: ignore=unused-argument
         x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
         y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
 

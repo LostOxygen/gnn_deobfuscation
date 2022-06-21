@@ -2,10 +2,9 @@
 import torch
 from torch import nn
 import numpy as np
-from torch.utils.data import Dataset
 from torch_geometric.loader import DataLoader
 
-from utils.datasets import gen_expr_data, operation_dict, IOSamplesDataset
+from utils.datasets import operation_dict, IOSamplesDataset
 
 
 def get_dataloader(batch_size: int) -> DataLoader:
@@ -24,9 +23,7 @@ def get_dataloader(batch_size: int) -> DataLoader:
     return train_loader, test_loader
 
 
-def train_model(model: torch.nn.Module,
-                epochs: int,
-                device: str) -> None:
+def train_model(model: torch.nn.Module, epochs: int, batch_size: int, device: str) -> None:
     """
     Helper function to train a given model on a given datasetmodel
     
@@ -34,6 +31,7 @@ def train_model(model: torch.nn.Module,
         model: the model which should be trained
         dataset: the dataset on which the model should be trained
         epochs: number of training epochs
+        batch_size: batch size of the dataloader
         device: device string
     
     Returns:
@@ -43,9 +41,13 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
-    data_loader, test_loader = get_dataloader(batch_size=32)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    loss_fn = nn.CrossEntropyLoss()
+    data_loader, test_loader = get_dataloader(batch_size)
+    train_mask = IOSamplesDataset().train_mask.repeat(batch_size, 1)
+    test_mask = IOSamplesDataset().test_mask.unsqueeze(dim=0)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+    # loss_fn = nn.CrossEntropyLoss()
+    loss_fn = nn.NLLLoss()
     running_loss = 0.0
 
     print("\n[[ Training ]]")
@@ -53,10 +55,9 @@ def train_model(model: torch.nn.Module,
     model.train()
     for epoch, (x, y, edge_index) in enumerate(data_loader):
         if epoch >= epochs: break
-        x, y = x.to(device), y.to(device)
-        edge_index = edge_index[0].to(device)
+        x, y, edge_index = x.to(device), y.to(device), edge_index.to(device)
         
-        prediction = model(x, edge_index)
+        prediction = model(x, edge_index[0])
         loss = loss_fn(prediction, y)
  
         # Backpropagation
@@ -75,20 +76,20 @@ def train_model(model: torch.nn.Module,
     total_preds = 0
 
     with torch.no_grad():
-        for epoch, (x, y, edge_index) in enumerate(test_loader):
+        for epoch, (x_test, y_test, edge_index) in enumerate(test_loader):
             total_preds += 1
             if epoch >= 99:
                 break
-            prediction = model(x, edge_index[0])
-            prediced_op = prediction.argmax().item()
+            prediction = model(x_test, edge_index[0])
+            predicted_op = prediction.argmax().item()
 
-            if prediced_op == y.item():
+            if predicted_op == y_test.item():
                 true_preds += 1
-                print(f"✓ correct   -> Pred: {operation_dict[prediced_op]} | "\
-                      f"Real: {operation_dict[y.item()]}")
+                print(f"✓ correct   -> Pred: {operation_dict[predicted_op]} | "
+                      f"Real: {operation_dict[y_test.item()]}")
             else:
-                print(f"× incorrect -> Pred: {operation_dict[prediced_op]} | "\
-                      f"Real: {operation_dict[y.item()]}")
+                print(f"× incorrect -> Pred: {operation_dict[predicted_op]} | "
+                      f"Real: {operation_dict[y_test.item()]}")
 
 
     print(f"\n[ test results ]\n"

@@ -18,7 +18,7 @@ torch.backends.cudnn.benchmark = True
 DATA_PATH = "./data/"
 
 
-def main(gpu: int) -> None:
+def main(gpu: int, epochs: int, batch_size: 32) -> None:
     """main function for lda stability testing"""
     start = time.perf_counter()
 
@@ -34,11 +34,12 @@ def main(gpu: int) -> None:
           f"{os.cpu_count()} threads and "
           f"{torch.cuda.device_count()} GPUs on {socket.gethostname()}")
     print(f"## Using: {device}")
+    print(f"## Training for {epochs} epochs with batch size {batch_size}")
     print("#"*75)
     print()
 
     model = GNN(IOSamplesDataset().num_features, IOSamplesDataset().num_classes).to(device)
-    train_model(model, 10000, device)
+    train_model(model, epochs, batch_size, device)
 
 
     end = time.perf_counter()
@@ -49,5 +50,7 @@ def main(gpu: int) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
+    parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=10000)
+    parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=32)
     args = parser.parse_args()
     main(**vars(args))
