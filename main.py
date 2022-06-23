@@ -23,9 +23,11 @@ def main(gpu: int, epochs: int, batch_size: 32) -> None:
     start = time.perf_counter()
 
     device = "cpu"
-    if gpu == 0:
+    if gpu == -1:
+        pass
+    elif gpu == 0:
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-    if gpu == 1:
+    elif gpu == 1:
         device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
     print("\n\n\n"+"#"*75)
@@ -51,6 +53,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
     parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=10000)
-    parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=32)
+    parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     args = parser.parse_args()
     main(**vars(args))
