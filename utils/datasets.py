@@ -8,13 +8,14 @@ operation_dict = {
     0: "add",
     1: "sub",
     2: "mul",
-    3: "div",
-    4: "and",
-    5: "or",
-    6: "xor",
-    7: "shl",
-    8: "shr",
-    9: "NOP", # this is no operation
+    3: "and",
+    4: "or",
+    5: "xor",
+    6: "NOP",  # this is no operation
+    # 7: "div",
+    # 8: "shl",
+    # 9: "shr",
+
 }
 
 class IOSamplesDataset(torch.utils.data.Dataset):
@@ -72,6 +73,57 @@ class IOSamplesDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return int(1e9)
+
+
+class ExpressionsDataset(torch.utils.data.Dataset):
+    """
+    Class for Expressions with results packed in a pytorch Dataset.
+    """
+
+    def __init__(self):
+        self.edge_index = torch.tensor(
+            [[0, 1],
+             [2, 1],
+             [1, 3]],
+            dtype=torch.long).t().contiguous()
+        self.num_classes = len(operation_dict)
+        self.num_features = 1
+        self.train_mask = torch.tensor([False, False, False, True], dtype=torch.bool)
+        self.test_mask = torch.tensor([False, False, False, True], dtype=torch.bool)
+
+    def __getitem__(self, idx):  # pylint: ignore=unused-argument
+        x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
+        y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
+
+        chosen_operation = torch.randint(0, self.num_classes-1, (1,)).item()
+
+        z_val = self._get_expression_result(chosen_operation, x_val, y_val).to(torch.int32)
+
+        x = torch.tensor([[x_val], [y_val], [0.], [0.]], dtype=torch.float)
+        y = torch.tensor([z_val], dtype=torch.float)
+
+        return x, y, self.edge_index
+
+    def _get_expression_result(self, op: int, val1: int, val2: int) -> int:
+        match op:
+            case 0: z_val = val1 + val2
+            case 1: z_val = val1 - val2
+            case 2: z_val = val1 * val2
+            case 3:
+                if val2 == 0:
+                    val2 += 1
+                z_val = val1 / val2
+            case 4: z_val = val1 & val2
+            case 5: z_val = val1 | val2
+            case 6: z_val = val1 ^ val2
+            case 7: z_val = val1 << val2
+            case 8: z_val = val1 >> val2
+
+        return z_val
+
+    def __len__(self):
+        return int(1e9)
+
 
 
 def gen_expr_data() -> Iterator[Data]:

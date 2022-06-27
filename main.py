@@ -9,9 +9,9 @@ import os
 import torch
 import numpy as np
 
-from utils.models import GNN
-from utils.training import train_model
-from utils.datasets import IOSamplesDataset
+from utils.models import GNN, MappingGNN
+from utils.training import train_model, train_expression  # pylint: ignore=unused-import
+from utils.datasets import IOSamplesDataset, ExpressionsDataset  # pylint: ignore=unused-import
 
 torch.backends.cudnn.benchmark = True
 
@@ -40,8 +40,8 @@ def main(gpu: int, epochs: int, batch_size: 32) -> None:
     print("#"*75)
     print()
 
-    model = GNN(IOSamplesDataset().num_features, IOSamplesDataset().num_classes).to(device)
-    train_model(model, epochs, batch_size, device)
+    model = MappingGNN(ExpressionsDataset().num_features, ExpressionsDataset().num_classes).to(device)
+    train_expression(model, epochs, batch_size, device)
 
 
     end = time.perf_counter()
