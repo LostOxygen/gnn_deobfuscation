@@ -9,16 +9,17 @@ import os
 import torch
 import numpy as np
 
-from utils.models import GNN, MappingGNN
-from utils.training import train_model, train_expression  # pylint: ignore=unused-import
-from utils.datasets import IOSamplesDataset, ExpressionsDataset  # pylint: ignore=unused-import
+from utils.models import MappingGNN
+from utils.datasets import gen_expr_data
+from utils.utils import create_datasets
 
 torch.backends.cudnn.benchmark = True
 
 DATA_PATH = "./data/"
+DATASET_SIZE = 10000
 
 
-def main(gpu: int, epochs: int, batch_size: 32) -> None:
+def main(gpu: int, epochs: int, batch_size: int) -> None:
     """main function for lda stability testing"""
     start = time.perf_counter()
 
@@ -40,9 +41,19 @@ def main(gpu: int, epochs: int, batch_size: 32) -> None:
     print("#"*75)
     print()
 
-    model = MappingGNN(ExpressionsDataset().num_features, ExpressionsDataset().num_classes).to(device)
-    train_expression(model, epochs, batch_size, device)
+    # ---------------- create a model with correct parameters ----------------
+    temp_data = next(gen_expr_data(0))
+    model = MappingGNN(temp_data.num_features, temp_data.num_classes).to(device)
 
+    # ---------------- Create Mapping Dataset -------------
+    if not os.path.isfile(DATA_PATH+"train_data.tar"):
+        create_datasets(DATASET_SIZE, int(DATASET_SIZE*0.2), device, epochs, model)
+
+    # ---------------- Train Mapping Model ----------------
+    # todo
+
+    # ---------------- Test Mapping Model ----------------
+    # todo
 
     end = time.perf_counter()
     duration = (np.round(end - start) / 60.) / 60.
@@ -52,7 +63,7 @@ def main(gpu: int, epochs: int, batch_size: 32) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
-    parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=10000)
+    parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=1000)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     args = parser.parse_args()
     main(**vars(args))

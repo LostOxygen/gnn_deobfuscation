@@ -144,7 +144,7 @@ def train_model(model: torch.nn.Module, epochs: int, batch_size: int, device: st
           f"{np.round((true_preds/total_preds)*100, 2)}% accuracy\n")
 
 
-def train_expression(model: torch.nn.Module, epochs: int, batch_size: int, device: str) -> nn.Sequential:
+def train_expression(model: torch.nn.Module, epochs: int, device: str, operation: int) -> nn.Sequential:
     """
     Helper function to train a given model to learn expressions
     
@@ -161,26 +161,19 @@ def train_expression(model: torch.nn.Module, epochs: int, batch_size: int, devic
     """
     print("[[ Network Architecture ]]")
     print(model)
-
-    data_loader, _ = get_dataloader(ExpressionsDataset(), batch_size)
-    train_mask = ExpressionsDataset().train_mask.repeat(batch_size, 1)
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
 
     loss_fn = nn.MSELoss()
     running_loss = 0.0
 
     print("\n[[ Training ]]")
     model.train()
-    for epoch, (x, y, edge_index) in enumerate(data_loader):
-        if epoch >= epochs:
-            return model
-
-        x, y, edge_index = x.to(device), y.to(device), edge_index.to(device)
-
-        prediction = model(x, edge_index[0])
-        print(prediction[train_mask].item(), y.item())
-        loss = loss_fn(prediction[train_mask], y)
+    latest_embed = None
+    for epoch in range(epochs):
+        data = next(gen_expr_data(operation)).to(device)
+        prediction, embed = model(data.x, data.edge_index)
+        latest_embed = embed
+        loss = loss_fn(prediction[data.train_mask].squeeze(0), data.y)
 
         # Backpropagation
         optimizer.zero_grad()
@@ -191,6 +184,20 @@ def train_expression(model: torch.nn.Module, epochs: int, batch_size: int, devic
         running_loss += loss.item()
         print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
 
+
+    # model = model.to("cpu")
+    # model.eval()
+    # print()
+
+    # with torch.no_grad():
+    #     for _ in range(100):
+    #         data = next(gen_expr_data(operation)).to("cpu")
+    #         prediction, _ = model(data.x, data.edge_index)
+    #         predicted = prediction[data.test_mask].squeeze(0).item()
+
+    #         print(f"Pred: {predicted} | True: {data.y.item()}")
+
+    return model, latest_embed
 
 def visualize(embedding: torch.Tensor, color: Any) -> None:
     """

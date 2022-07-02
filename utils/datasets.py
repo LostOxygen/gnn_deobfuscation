@@ -6,12 +6,12 @@ from torch_geometric.data import Data
 
 operation_dict = {
     0: "add",
-    1: "sub",
-    2: "mul",
-    3: "and",
-    4: "or",
-    5: "xor",
-    6: "NOP",  # this is no operation
+    # 1: "sub",
+    # 2: "mul",
+    # 3: "and",
+    # 4: "or",
+    # 5: "xor",
+    # 6: "NOP",  # this is no operation
     # 7: "div",
     # 8: "shl",
     # 9: "shr",
@@ -95,11 +95,12 @@ class ExpressionsDataset(torch.utils.data.Dataset):
         x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
         y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
 
-        chosen_operation = torch.randint(0, self.num_classes-1, (1,)).item()
+        # chosen_operation = torch.randint(0, self.num_classes-1, (1,)).item()
+        chosen_operation = 0
 
-        z_val = self._get_expression_result(chosen_operation, x_val, y_val).to(torch.int32)
+        z_val = self._get_expression_result(chosen_operation, x_val, y_val)
 
-        x = torch.tensor([[x_val], [y_val], [0.], [0.]], dtype=torch.float)
+        x = torch.tensor([[x_val], [y_val], [100.], [100.]], dtype=torch.float)
         y = torch.tensor([z_val], dtype=torch.float)
 
         return x, y, self.edge_index
@@ -122,46 +123,25 @@ class ExpressionsDataset(torch.utils.data.Dataset):
         return z_val
 
     def __len__(self):
-        return int(1e9)
+        return int(1e16)
 
 
 
-def gen_expr_data() -> Iterator[Data]:
-    """
-    Helper function to yield a data object for a simple expression like x+y=z
-    0: addition
-    1: subtraction
-    2: multiplication
-    3: division
-    4: logical and
-    5: logical or
-    6: logical xor
-    7: logical shift left
-    8: logical shift right
-    9: logical not
-
-    Paramters:
-        None
-    
-    Returns:
-        Data object for the given dataset
-    """
-
-    edge_index = torch.tensor([
-        [0, 1],
-        [1, 3],
-        [2, 1]], dtype=torch.long
-    ).t().contiguous()
-
+def gen_expr_data(operation: int) -> Iterator[Data]:
     while True:
-        train_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
-        test_mask = torch.tensor([False, True, False, False], dtype=torch.bool)
+        edge_index = torch.tensor(
+                [[0, 1],
+                 [2, 1],
+                 [1, 3]],
+            dtype=torch.long).t().contiguous()
+
+        train_mask = torch.tensor([False, False, False, True], dtype=torch.bool)
+        test_mask = torch.tensor([False, False, False, True], dtype=torch.bool)
 
         x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
         y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
 
-        chosen_operation = torch.randint(0, len(operation_dict)-1, (1,)).item()
-        match chosen_operation:
+        match operation:
             case 0: z_val = x_val + y_val
             case 1: z_val = x_val - y_val
             case 2: z_val = x_val * y_val
@@ -175,8 +155,8 @@ def gen_expr_data() -> Iterator[Data]:
             case 7: z_val = x_val << y_val
             case 8: z_val = x_val >> y_val
 
-        x = torch.tensor([[x_val], [0.], [y_val], [z_val]], dtype=torch.float)
-        y = torch.tensor([9, chosen_operation, 9, 9], dtype=torch.long)
+        x = torch.tensor([[x_val], [y_val], [100.], [100.]], dtype=torch.float)
+        y = torch.tensor([z_val], dtype=torch.float)
 
         data = Data(x=x, y=y, edge_index=edge_index)
         data.train_mask = train_mask
