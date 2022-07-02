@@ -2,9 +2,11 @@ import os
 import numpy as np
 import torch
 from torch import nn
-from torch_geometric import nn as nn_geo
 from tqdm import tqdm
 import webdataset as wds
+
+from utils.models import MappingGNN
+from utils.datasets import gen_expr_data
 
 from .training import train_expression
 
@@ -32,7 +34,7 @@ def get_model_weights(model: nn.Sequential) -> torch.FloatTensor:
     return torch.FloatTensor(weights.cpu())
 
 
-def create_datasets(train_size: int, test_size: int, device: str, epochs: int, model: nn.Sequential) -> None:
+def create_datasets(train_size: int, test_size: int, device: str, epochs: int) -> None:
     """
     helper function to create and save the datasets. Dataset maps the weights of the trained
     model to the corresponding operation.
@@ -54,6 +56,10 @@ def create_datasets(train_size: int, test_size: int, device: str, epochs: int, m
         wds.TarWriter(DATA_PATH+"test_data.tar") as test_sink,
     ):
         for idx in tqdm(range(train_size)):
+            # create a fresh model
+            temp_data = next(gen_expr_data(0))
+            model = MappingGNN(temp_data.num_features, temp_data.num_classes).to(device)
+
             match idx:
                 # 20% of the train data for "add"
                 case idx if idx >= 0 and idx < np.floor(train_size*0.2):

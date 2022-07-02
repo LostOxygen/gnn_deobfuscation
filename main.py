@@ -9,8 +9,6 @@ import os
 import torch
 import numpy as np
 
-from utils.models import MappingGNN
-from utils.datasets import gen_expr_data
 from utils.utils import create_datasets
 
 torch.backends.cudnn.benchmark = True
@@ -41,13 +39,9 @@ def main(gpu: int, epochs: int, batch_size: int) -> None:
     print("#"*75)
     print()
 
-    # ---------------- create a model with correct parameters ----------------
-    temp_data = next(gen_expr_data(0))
-    model = MappingGNN(temp_data.num_features, temp_data.num_classes).to(device)
-
     # ---------------- Create Mapping Dataset -------------
     if not os.path.isfile(DATA_PATH+"train_data.tar"):
-        create_datasets(DATASET_SIZE, int(DATASET_SIZE*0.2), device, epochs, model)
+        create_datasets(DATASET_SIZE, int(DATASET_SIZE*0.2), device, epochs)
 
     # ---------------- Train Mapping Model ----------------
     # todo
