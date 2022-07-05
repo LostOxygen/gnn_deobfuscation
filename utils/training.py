@@ -17,6 +17,26 @@ MODEL_PATH = "./models/"
 DATA_PATH = "./data/"
 
 
+def save_model(net: nn.Sequential, operation_suffix: str) -> None:
+    """
+    helper function which saves the given net in the specified path.
+    if the path does not exists, it will be created.
+
+    Parameters:
+        net: the model to save
+        operation_suffix: the suffix of the operation to create the save path with
+    
+    Returns:
+        None
+    """
+    state = {
+        'net': net.state_dict()
+    }
+    if not os.path.isdir(MODEL_PATH):
+        os.mkdir(MODEL_PATH)
+    torch.save(state, f"{MODEL_PATH}gnn_model_{operation_suffix}")
+
+
 def adjust_learning_rate(optimizer, epoch: int, epochs: int, learning_rate: int) -> None:
     """
     helper function to adjust the learning rate
@@ -283,6 +303,8 @@ def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequen
             t_total += targets_t.size(0)
             t_correct += predicted_t.eq(targets_t).sum().item()
         print("-> test acc: {}".format(100.*t_correct/t_total))
+
+    save_model(model, "mapping")
 
 
 def visualize(embedding: torch.Tensor, color: Any) -> None:
