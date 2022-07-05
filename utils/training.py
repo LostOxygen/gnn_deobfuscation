@@ -201,10 +201,7 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
         the trained model
 
     """
-    print("[[ Network Architecture ]]")
-    print(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
-
     loss_fn = nn.MSELoss()
     running_loss = 0.0
 

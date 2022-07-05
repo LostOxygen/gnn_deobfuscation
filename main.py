@@ -60,7 +60,7 @@ def main(gpu: int, epochs: int, batch_size: int) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
-    parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=10)
+    parser.add_argument("--epochs", "-e", help="number of gnn epochs", type=int, default=10000)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     args = parser.parse_args()
     main(**vars(args))
