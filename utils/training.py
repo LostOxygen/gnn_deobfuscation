@@ -16,6 +16,30 @@ from utils.datasets import (
 MODEL_PATH = "./models/"
 DATA_PATH = "./data/"
 
+
+def adjust_learning_rate(optimizer, epoch: int, epochs: int, learning_rate: int) -> None:
+    """
+    helper function to adjust the learning rate
+    according to the current epoch to prevent overfitting.
+    
+    Parameters:
+        optimizer: the optimizer to adjust the learning rate with
+        epoch: the current epoch
+        epochs: the total number of epochs
+        learning_rate: the learning rate to adjust
+
+    Returns:
+        None
+    """
+    new_lr = learning_rate
+    if epoch >= np.floor(epochs*0.5):
+        new_lr /= 10
+    if epoch >= np.floor(epochs*0.75):
+        new_lr /= 10
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = new_lr
+
+
 def get_mapping_loaders(batch_size: int) -> DataLoader:
     """
     Helper function to create the dataloader for network weights to operation mapping.
@@ -36,10 +60,8 @@ def get_mapping_loaders(batch_size: int) -> DataLoader:
     test_dataset = wds.WebDataset(test_data_path).shuffle(1000).decode().to_tuple("input.pyd",
                                                                                   "output.pyd")
 
-    train_loader = DataLoader((train_dataset.batched(
-        batch_size)), batch_size=None, num_workers=0)
-    test_loader = DataLoader((test_dataset.batched(
-        batch_size)), batch_size=None, num_workers=0)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=0)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=0)
 
     return train_loader, test_loader
 
@@ -172,7 +194,7 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
     for epoch in range(epochs):
         data = next(gen_expr_data(operation)).to(device)
         prediction, embed = model(data.x, data.edge_index)
-        latest_embed = embed
+        latest_embed = embed[data.train_mask]
         loss = loss_fn(prediction[data.train_mask].squeeze(0), data.y)
 
         # Backpropagation
@@ -196,8 +218,72 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
     #         predicted = prediction[data.test_mask].squeeze(0).item()
 
     #         print(f"Pred: {predicted} | True: {data.y.item()}")
-
+    print("latest embed", latest_embed.shape)
     return model, latest_embed
+
+
+def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequential:
+    """
+    Helper function to train a given model to learn expressions
+    
+    Parameters:
+        model: the model which should be trained
+        dataset: the dataset on which the model should be trained
+        epochs: number of training epochs
+        batch_size: batch size of the dataloader
+        device: device string
+    
+    Returns:
+        the trained model
+
+    """
+    train_loader, test_loader = get_mapping_loaders(512)
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), 0.1, 0.9, 5e-4)
+
+    print("[[ Train Mapping ]]")
+    model = model.to(device)
+    model.train()
+
+    for epoch in range(epochs):
+        adjust_learning_rate(optimizer, epoch, epochs, 0.1)
+        correct = 0
+        total = 0
+        running_loss = 0.0
+
+        for epoch, (x, y) in enumerate(train_loader):
+            x, y = x.to(device), y.squeeze().to(device)
+            prediction = model(x)
+            loss = loss_fn(prediction, y)
+
+            # Backpropagation
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            _, predicted = prediction.max(1)
+
+            # calculate the current running loss as well as the total accuracy
+            # and update the progressbar accordingly
+            running_loss += loss.item()
+            total += y.size(0)
+            correct += predicted.eq(y).sum().item()
+            print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
+
+    print()
+    # calculate the test accuracy of the network at the end of each epoch
+    with torch.no_grad():
+        model.eval()
+        t_total = 0
+        t_correct = 0
+        for _, (inputs_t, targets_t) in enumerate(test_loader):
+            inputs_t = inputs_t.to(device)
+            targets_t = targets_t.squeeze().to(device)
+            outputs_t = model(inputs_t)
+            _, predicted_t = outputs_t.max(1)
+            t_total += targets_t.size(0)
+            t_correct += predicted_t.eq(targets_t).sum().item()
+        print("-> test acc: {}".format(100.*t_correct/t_total))
+
 
 def visualize(embedding: torch.Tensor, color: Any) -> None:
     """

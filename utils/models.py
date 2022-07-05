@@ -68,3 +68,22 @@ class MappingGNN(torch.nn.Module):
         c = self.fc3(c)
         # c = F.log_softmax(x, dim=-1)
         return c, embed
+
+
+class MappingModel(nn.Module):
+    """MappingModel"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Linear(16, 512),
+            nn.Tanh(),
+            nn.Linear(512, 256),
+            nn.Tanh(),
+            nn.Linear(256, 5),
+            nn.Softmax(dim=-1)
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.layers(x)
+        return x

@@ -10,6 +10,8 @@ import torch
 import numpy as np
 
 from utils.utils import create_datasets
+from utils.training import train_mapping
+from utils.models import MappingModel
 
 torch.backends.cudnn.benchmark = True
 
@@ -44,7 +46,8 @@ def main(gpu: int, epochs: int, batch_size: int) -> None:
         create_datasets(DATASET_SIZE, int(DATASET_SIZE*0.2), device, epochs)
 
     # ---------------- Train Mapping Model ----------------
-    # todo
+    model = MappingModel()
+    train_mapping(model, 100, device)
 
     # ---------------- Test Mapping Model ----------------
     # todo
@@ -57,7 +60,7 @@ def main(gpu: int, epochs: int, batch_size: int) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
-    parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=10000)
+    parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=10)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     args = parser.parse_args()
     main(**vars(args))
