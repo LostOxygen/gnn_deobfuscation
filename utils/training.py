@@ -129,8 +129,6 @@ def train_model(model: torch.nn.Module, epochs: int, batch_size: int, device: st
     # loss_fn = nn.NLLLoss()
     running_loss = 0.0
 
-    print("\n[[ Training ]]")
-
     model.train()
     for epoch, (x, y, edge_index) in enumerate(data_loader):
         x, y, edge_index = x.to(device), y.to(device), edge_index.to(device)
@@ -205,7 +203,6 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
     loss_fn = nn.MSELoss()
     running_loss = 0.0
 
-    print("\n[[ Training ]]")
     model.train()
     latest_embed = None
     for epoch in range(epochs):
@@ -235,7 +232,6 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
     #         predicted = prediction[data.test_mask].squeeze(0).item()
 
     #         print(f"Pred: {predicted} | True: {data.y.item()}")
-    print("latest embed", latest_embed.shape)
     return model, latest_embed
 
 
