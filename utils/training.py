@@ -4,6 +4,7 @@ from typing import Any
 import torch
 from torch import nn
 import numpy as np
+import pkbar
 from torch_geometric.loader import DataLoader
 import matplotlib.pyplot as plt
 import webdataset as wds
@@ -250,9 +251,10 @@ def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequen
         the trained model
 
     """
-    train_loader, test_loader = get_mapping_loaders(512)
+    batch_size = 64
+    train_loader, test_loader = get_mapping_loaders(batch_size)
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), 0.1, 0.9, 5e-4)
+    optimizer = torch.optim.SGD(model.parameters(), 0.001, 0.9, 5e-4)
 
     print("[[ Train Mapping ]]")
     model = model.to(device)
@@ -263,8 +265,10 @@ def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequen
         correct = 0
         total = 0
         running_loss = 0.0
+        kbar = pkbar.Kbar(target=int(10000/batch_size), epoch=epoch, num_epochs=epochs,
+                          width=20, always_stateful=True)
 
-        for epoch, (x, y) in enumerate(train_loader):
+        for batch_idx, (x, y) in enumerate(train_loader):
             x, y = x.to(device), y.squeeze().to(device)
             prediction = model(x)
             loss = loss_fn(prediction, y)
@@ -280,7 +284,9 @@ def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequen
             running_loss += loss.item()
             total += y.size(0)
             correct += predicted.eq(y).sum().item()
-            print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
+            kbar.update(batch_idx, values=[("loss", running_loss/(batch_idx+1)),
+                                           ("acc", 100. * correct/total)])
+            # print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
 
     print()
     # calculate the test accuracy of the network at the end of each epoch
