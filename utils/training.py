@@ -208,8 +208,7 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
     latest_embed = None
     for epoch in range(epochs):
         data = next(gen_expr_data(operation)).to(device)
-        prediction, embed = model(data.x, data.edge_index)
-        latest_embed = embed[data.train_mask]
+        prediction, _ = model(data.x, data.edge_index)
         loss = loss_fn(prediction[data.train_mask].squeeze(0), data.y)
 
         # Backpropagation
@@ -233,7 +232,7 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
     #         predicted = prediction[data.test_mask].squeeze(0).item()
 
     #         print(f"Pred: {predicted} | True: {data.y.item()}")
-    return model, latest_embed
+    return model
 
 
 def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequential:
