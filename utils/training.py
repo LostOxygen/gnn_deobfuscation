@@ -200,16 +200,14 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
         the trained model
 
     """
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001, weight_decay=5e-4)
     loss_fn = nn.MSELoss()
     running_loss = 0.0
 
     model.train()
-    latest_embed = None
     for epoch in range(epochs):
         data = next(gen_expr_data(operation)).to(device)
-        prediction, embed = model(data.x, data.edge_index)
-        latest_embed = embed[data.train_mask]
+        prediction = model(data.x, data.edge_index)
         loss = loss_fn(prediction[data.train_mask].squeeze(0), data.y)
 
         # Backpropagation
@@ -222,18 +220,18 @@ def train_expression(model: torch.nn.Module, epochs: int, device: str, operation
         print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
 
 
-    # model = model.to("cpu")
-    # model.eval()
-    # print()
+    model = model.to("cpu")
+    model.eval()
+    print()
 
-    # with torch.no_grad():
-    #     for _ in range(100):
-    #         data = next(gen_expr_data(operation)).to("cpu")
-    #         prediction, _ = model(data.x, data.edge_index)
-    #         predicted = prediction[data.test_mask].squeeze(0).item()
+    with torch.no_grad():
+        for _ in range(100):
+            data = next(gen_expr_data(operation)).to("cpu")
+            prediction = model(data.x, data.edge_index)
+            predicted = prediction[data.test_mask].squeeze(0).item()
 
-    #         print(f"Pred: {predicted} | True: {data.y.item()}")
-    return model, latest_embed
+            print(f"Pred: {predicted} | True: {data.y.item()}")
+    return model
 
 
 def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequential:
@@ -254,7 +252,7 @@ def train_mapping(model: torch.nn.Module, epochs: int, device: str) -> nn.Sequen
     batch_size = 64
     train_loader, test_loader = get_mapping_loaders(batch_size)
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), 0.001, 0.9, 5e-4)
+    optimizer = torch.optim.SGD(model.parameters(), 0.1, 0.9, 5e-4)
 
     print("[[ Train Mapping ]]")
     model = model.to(device)

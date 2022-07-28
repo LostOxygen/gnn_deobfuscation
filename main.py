@@ -10,8 +10,9 @@ import torch
 import numpy as np
 
 from utils.utils import create_datasets
-from utils.training import train_mapping
-from utils.models import MappingModel
+from utils.training import train_mapping, train_expression
+from utils.models import MappingModel, MappingGNN
+from utils.datasets import gen_expr_data
 
 torch.backends.cudnn.benchmark = True
 
@@ -41,13 +42,18 @@ def main(gpu: int, epochs: int, batch_size: int) -> None:
     print("#"*75)
     print()
 
+    temp_data = next(gen_expr_data(0))
+    model = MappingGNN(temp_data.num_features,temp_data.num_classes).to(device)
+    _= train_expression(model, epochs, device, 0)
+
+
     # ---------------- Create Mapping Dataset -------------
-    if not os.path.isfile(DATA_PATH+"train_data.tar"):
-        create_datasets(DATASET_SIZE, int(DATASET_SIZE*0.2), device, epochs)
+    # if not os.path.isfile(DATA_PATH+"train_data.tar"):
+    #     create_datasets(DATASET_SIZE, int(DATASET_SIZE*0.2), device, epochs)
 
     # ---------------- Train Mapping Model ----------------
-    model = MappingModel()
-    train_mapping(model, 100, device)
+    # model = MappingModel()
+    # train_mapping(model, 100, device)
 
     # ---------------- Test Mapping Model ----------------
     # todo
@@ -60,7 +66,7 @@ def main(gpu: int, epochs: int, batch_size: int) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
-    parser.add_argument("--epochs", "-e", help="number of gnn epochs", type=int, default=10000)
+    parser.add_argument("--epochs", "-e", help="number of gnn epochs", type=int, default=100000)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     args = parser.parse_args()
     main(**vars(args))

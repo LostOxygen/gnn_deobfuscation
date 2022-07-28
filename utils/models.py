@@ -67,7 +67,7 @@ class MappingGNN(nn.Module):
         # c = self.fc2(c).relu()
         # c = self.fc3(c)
         # c = F.log_softmax(x, dim=-1)
-        return self.layers(x, edge_index), None
+        return self.layers(x, edge_index)
 
 
 class MappingModel(nn.Module):
@@ -76,11 +76,11 @@ class MappingModel(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.layers = nn.Sequential(
-            nn.Linear(16, 32),
+            nn.Linear(19088, 1024),
             nn.Tanh(),
-            nn.Linear(32, 32),
+            nn.Linear(1024, 512),
             nn.Tanh(),
-            nn.Linear(32, 5),
+            nn.Linear(512, 5),
             nn.Softmax(dim=-1)
         )
 
