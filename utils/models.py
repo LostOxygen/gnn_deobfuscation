@@ -2,7 +2,31 @@ import torch
 from torch import nn
 from torch import Tensor
 import torch.nn.functional as F
-from torch_geometric.nn import SAGEConv, GCNConv, Sequential
+from torch_geometric.nn import SAGEConv, GCNConv, Sequential, GATv2Conv
+
+
+class GATNetwork(torch.nn.Module):
+    """Graph attention neural network"""
+
+    def __init__(self, dim_in, dim_h, dim_out, heads=8):
+        super().__init__()
+        self.gat1 = GATv2Conv(dim_in, dim_h, heads=heads)
+        self.gat2 = GATv2Conv(dim_h*heads, 16, heads=1)
+        self.fc = nn.Linear(16, 32)
+        self.fc2 = nn.Linear(32, 64)
+        self.fc3 = nn.Linear(64, dim_out)
+
+    def forward(self, x, edge_index):
+        h = F.dropout(x, p=0.5, training=self.training)
+        h = self.gat1(x, edge_index)
+        h = F.elu(h)
+        h = F.dropout(h, p=0.5, training=self.training)
+        h = self.gat2(h, edge_index)
+        h = F.elu(h)
+        h = self.fc(h).relu()
+        h = self.fc2(h).relu()
+        h = self.fc3(h)
+        return F.log_softmax(h, dim=1)
 
 
 class GNN(torch.nn.Module):
@@ -29,7 +53,7 @@ class GNN(torch.nn.Module):
         c = self.fc2(c).relu()
         c = self.fc3(c)
         # c = F.log_softmax(c, dim=-1)
-        return c, x
+        return c
 
 
 class MappingGNN(nn.Module):
