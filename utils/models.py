@@ -13,9 +13,9 @@ class GATNetwork(torch.nn.Module):
         self.gat1 = GATv2Conv(dim_in, dim_h, heads=heads)
         self.gat2 = GATv2Conv(dim_h*heads, dim_h, heads=heads)
         self.gat3 = GATv2Conv(dim_h*heads, 16, heads=1)
-        self.fc = nn.Linear(16, 64)
-        self.fc2 = nn.Linear(64, 128)
-        self.fc3 = nn.Linear(128, dim_out)
+        self.fc = nn.Linear(16, 128)
+        self.fc2 = nn.Linear(128, 256)
+        self.fc3 = nn.Linear(256, dim_out)
 
     def forward(self, x, edge_index):
         h = F.dropout(x, p=0.2, training=self.training)
