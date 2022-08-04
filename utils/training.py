@@ -5,7 +5,7 @@ import numpy as np
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
-from utils.datasets import gen_expr_data
+from utils.datasets import gen_expr_data, operation_dict
 
 
 def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
@@ -76,14 +76,16 @@ def train_model(model: torch.nn.Module,
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
 
-            prediced_op = prediction[data.test_mask].argmax()
+            predicted_op = prediction[data.test_mask].argmax()
             true_op = int(data.y.item())
 
-            if prediced_op == true_op:
+            if predicted_op == true_op:
                 true_preds += 1
-                print(f"✓ correct   -> Pred: {prediced_op} | Real: {true_op}")
+                print(f"✓ correct   -> Pred: {operation_dict[predicted_op.item()]} ({predicted_op})"
+                      f" Real: {operation_dict[true_op]} ({true_op})")
             else:
-                print(f"× incorrect -> Pred: {prediced_op} | Real: {true_op}")
+                print(f"× incorrect -> Pred: {operation_dict[predicted_op.item()]} ({predicted_op})"
+                      f" Real: {operation_dict[true_op]} ({true_op})")
 
     print(f"\n[ test results ]\n"
           f"{true_preds}/{total_preds} correct predictions\n"
