@@ -11,18 +11,25 @@ class GATNetwork(torch.nn.Module):
     def __init__(self, dim_in, dim_h, dim_out, heads=8):
         super().__init__()
         self.gat1 = GATv2Conv(dim_in, dim_h, heads=heads)
-        self.gat2 = GATv2Conv(dim_h*heads, 16, heads=1)
-        self.fc = nn.Linear(16, 32)
-        self.fc2 = nn.Linear(32, 64)
-        self.fc3 = nn.Linear(64, dim_out)
+        self.gat2 = GATv2Conv(dim_h*heads, dim_h, heads=heads)
+        self.gat3 = GATv2Conv(dim_h*heads, 16, heads=1)
+        self.fc = nn.Linear(16, 128)
+        self.fc2 = nn.Linear(128, 256)
+        self.fc3 = nn.Linear(256, dim_out)
 
     def forward(self, x, edge_index):
         h = F.dropout(x, p=0.5, training=self.training)
         h = self.gat1(x, edge_index)
         h = F.elu(h)
+
         h = F.dropout(h, p=0.5, training=self.training)
         h = self.gat2(h, edge_index)
         h = F.elu(h)
+
+        h = F.dropout(h, p=0.5, training=self.training)
+        h = self.gat3(h, edge_index)
+        h = F.elu(h)
+
         h = self.fc(h).relu()
         h = self.fc2(h).relu()
         h = self.fc3(h)
