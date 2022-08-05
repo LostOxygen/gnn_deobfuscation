@@ -42,7 +42,7 @@ def main(gpu: int, epochs: int, batch_size: int) -> None:
     print()
 
     temp_data = next(gen_expr_data())
-    model = GATNetwork(temp_data.num_features, 8, temp_data.num_classes).to(device)
+    model = GATNetwork(temp_data.num_features, 16, temp_data.num_classes).to(device)
     _ = train_model(model, epochs, device)
 
 

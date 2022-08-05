@@ -12,7 +12,8 @@ class GATNetwork(torch.nn.Module):
         super().__init__()
         self.gat1 = GATv2Conv(dim_in, dim_h, heads=heads)
         self.gat2 = GATv2Conv(dim_h*heads, dim_h, heads=heads)
-        self.gat3 = GATv2Conv(dim_h*heads, dim_out, heads=1)
+        self.gat3 = GATv2Conv(dim_h*heads, dim_h, heads=heads)
+        self.gat4 = GATv2Conv(dim_h*heads, dim_out, heads=1)
 
     def forward(self, x, edge_index):
         h = F.dropout(x, p=0.2, training=self.training)
@@ -25,6 +26,10 @@ class GATNetwork(torch.nn.Module):
 
         h = F.dropout(h, p=0.2, training=self.training)
         h = self.gat3(h, edge_index)
+        h = F.elu(h)
+
+        h = F.dropout(h, p=0.2, training=self.training)
+        h = self.gat4(h, edge_index)
         return F.log_softmax(h, dim=1)
 
 
