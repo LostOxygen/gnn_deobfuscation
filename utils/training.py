@@ -42,7 +42,7 @@ def train_model(model: torch.nn.Module,
     print(model)
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.00001, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.00005, weight_decay=5e-4)
     loss_fn = nn.CrossEntropyLoss()
     running_loss = 0.0
 
