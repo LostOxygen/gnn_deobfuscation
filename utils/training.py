@@ -5,7 +5,7 @@ import numpy as np
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
-from utils.datasets import gen_expr_data, operation_dict
+from utils.datasets import gen_expr_data, gen_big_expr_data, operation_dict
 
 
 def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
@@ -51,7 +51,7 @@ def train_model(model: torch.nn.Module,
     for epoch in range(epochs):
         model.train()
 
-        data = next(gen_expr_data()).to(device)
+        data = next(gen_big_expr_data()).to(device)
         prediction = model(data.x, data.edge_index)
         loss = loss_fn(prediction[data.train_mask], data.y)
 
@@ -72,7 +72,7 @@ def train_model(model: torch.nn.Module,
     with torch.no_grad():
         for _ in range(100):
             total_preds += 1
-            data = next(gen_expr_data()).to(device)
+            data = next(gen_big_expr_data()).to(device)
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
 
