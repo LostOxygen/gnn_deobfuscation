@@ -13,3 +13,5 @@ pylint
 torchsummary
 webdataset
 pkbar
+einops
+rotary-embedding-torch
