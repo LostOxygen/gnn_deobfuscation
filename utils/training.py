@@ -75,7 +75,6 @@ def train_model(model: torch.nn.Module,
 
     with torch.no_grad():
         for _ in range(100):
-            total_preds += 1
             data = next(data_gen).to(device)
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
@@ -84,6 +83,7 @@ def train_model(model: torch.nn.Module,
             true_ops = [int(op.item()) for op in data.y]
 
             for predicted_op, true_op in zip(predicted_ops, true_ops):
+                total_preds += 1
                 if predicted_op == true_op:
                     true_preds += 1
                     print(f"✓ correct   -> Pred: {operation_dict[predicted_op]} ({predicted_op})"
