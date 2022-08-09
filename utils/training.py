@@ -24,7 +24,8 @@ def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
 
 def train_model(model: torch.nn.Module,
                 epochs: int,
-                device: str) -> None:
+                device: str,
+                big: bool) -> None:
     """
     Helper function to train a given model on a given datasetmodel
     
@@ -41,6 +42,9 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
+    data_gen = gen_big_expr_data() if big else gen_expr_data()
+
+
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.00005, weight_decay=5e-4)
     loss_fn = nn.CrossEntropyLoss()
@@ -51,7 +55,7 @@ def train_model(model: torch.nn.Module,
     for epoch in range(epochs):
         model.train()
 
-        data = next(gen_big_expr_data()).to(device)
+        data = next(data_gen).to(device)
         prediction = model(data.x, data.edge_index)
         loss = loss_fn(prediction[data.train_mask], data.y)
 
@@ -72,11 +76,11 @@ def train_model(model: torch.nn.Module,
     with torch.no_grad():
         for _ in range(100):
             total_preds += 1
-            data = next(gen_big_expr_data()).to(device)
+            data = next(data_gen).to(device)
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
 
-            predicted_ops = [pred_op.item() for pred_op in prediction[data.test_mask].argmax(dim=1)]
+            predicted_ops = [pred_op.item() for pred_op in prediction[data.test_mask].argmax(dim=-1)]
             true_ops = [int(op.item()) for op in data.y]
 
             for predicted_op, true_op in zip(predicted_ops, true_ops):
