@@ -76,16 +76,17 @@ def train_model(model: torch.nn.Module,
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
 
-            predicted_op = prediction[data.test_mask].argmax()
-            true_op = int(data.y.item())
+            predicted_ops = [pred_op.item() for pred_op in prediction[data.test_mask].argmax(dim=1)]
+            true_ops = [int(op.item()) for op in data.y]
 
-            if predicted_op == true_op:
-                true_preds += 1
-                print(f"✓ correct   -> Pred: {operation_dict[predicted_op.item()]} ({predicted_op})"
-                      f" Real: {operation_dict[true_op]} ({true_op})")
-            else:
-                print(f"× incorrect -> Pred: {operation_dict[predicted_op.item()]} ({predicted_op})"
-                      f" Real: {operation_dict[true_op]} ({true_op})")
+            for predicted_op, true_op in zip(predicted_ops, true_ops):
+                if predicted_op == true_op:
+                    true_preds += 1
+                    print(f"✓ correct   -> Pred: {operation_dict[predicted_op]} ({predicted_op})"
+                        f" Real: {operation_dict[true_op]} ({true_op})")
+                else:
+                    print(f"× incorrect -> Pred: {operation_dict[predicted_op]} ({predicted_op})"
+                        f" Real: {operation_dict[true_op]} ({true_op})")
 
     print(f"\n[ test results ]\n"
           f"{true_preds}/{total_preds} correct predictions\n"
