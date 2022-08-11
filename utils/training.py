@@ -1,4 +1,5 @@
 """libary for training functions and modularity"""
+import os
 import torch
 from torch import nn
 import numpy as np
@@ -6,6 +7,33 @@ from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
 from utils.datasets import gen_expr_data, gen_big_expr_data, operation_dict
+
+MODEL_PATH = "models/"
+
+
+def save_model(model: nn.Sequential, name: str) -> None:
+	"""
+	Helper function to save a pytorch model to a specific path.
+
+	Arguments:
+		model: Pytorch Sequential Model
+		path:  Path-string where the model should be saved
+
+	Returns:
+		None
+	"""
+	path = MODEL_PATH + name
+
+	# check if the path already exists, if not create it
+	if not os.path.exists(os.path.split(path)[0]):
+		os.mkdir(os.path.split(path)[0])
+
+	# extract the state_dict from the model to save it
+	model_state = {
+		"model": model.state_dict()
+	}
+
+	torch.save(model_state, path)
 
 
 def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
@@ -69,6 +97,8 @@ def train_model(model: torch.nn.Module,
         # accuray calculation
         running_loss += loss.item()
         print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
+
+    save_model(model, "gat_model")
 
     print("\n\n[[ Testing ]]")
     model.eval()
