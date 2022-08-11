@@ -19,7 +19,7 @@ DATA_PATH = "./data/"
 DATASET_SIZE = 10000
 
 
-def main(gpu: int, epochs: int, batch_size: int, big: bool) -> None:
+def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool) -> None:
     """main function for lda stability testing"""
     start = time.perf_counter()
 
@@ -43,7 +43,7 @@ def main(gpu: int, epochs: int, batch_size: int, big: bool) -> None:
 
     temp_data = next(gen_big_expr_data() if big else gen_expr_data())
     model = GATNetwork(temp_data.num_features, 16, temp_data.num_classes).to(device)
-    _ = train_model(model, epochs, device, big)
+    _ = train_model(model, epochs, device, lr, big)
 
 
     # ---------------- Create Mapping Dataset -------------
@@ -65,6 +65,8 @@ if __name__ == "__main__":
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
     parser.add_argument("--epochs", "-e", help="number of gnn epochs", type=int, default=1000000)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
+    parser.add_argument("--lr", help="learning rate", type=float, default=0.00005)
     parser.add_argument("--big", "-b", help="enable big graph", action="store_true", default=False)
     args = parser.parse_args()
     main(**vars(args))
+

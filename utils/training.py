@@ -25,6 +25,7 @@ def get_dataloader(dataset: InMemoryDataset, batch_size: int) -> DataLoader:
 def train_model(model: torch.nn.Module,
                 epochs: int,
                 device: str,
+                learning_rate: float,
                 big: bool) -> None:
     """
     Helper function to train a given model on a given datasetmodel
@@ -46,7 +47,7 @@ def train_model(model: torch.nn.Module,
 
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.00005, weight_decay=5e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=5e-4)
     loss_fn = nn.CrossEntropyLoss()
     running_loss = 0.0
 
