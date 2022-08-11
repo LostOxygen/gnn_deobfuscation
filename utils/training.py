@@ -43,7 +43,8 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
-    data_gen = gen_big_expr_data() if big else gen_expr_data()
+    data_gen = gen_big_expr_data(testing=False) if big else gen_expr_data()
+    data_gen_test = gen_big_expr_data(testing=True) if big else gen_expr_data()
 
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
@@ -76,7 +77,7 @@ def train_model(model: torch.nn.Module,
 
     with torch.no_grad():
         for _ in range(100):
-            data = next(data_gen).to(device)
+            data = next(data_gen_test).to(device)
             data = data.to(device)
             prediction = model(data.x, data.edge_index)
 
