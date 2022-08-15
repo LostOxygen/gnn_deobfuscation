@@ -54,7 +54,7 @@ def gen_expr_data() -> Iterator[Data]:
         yield data
 
 
-def gen_big_expr_data() -> Iterator[Data]:
+def gen_big_expr_data(testing: bool) -> Iterator[Data]:
     edge_index = torch.tensor(
         # 1 is the operation and 3 the result node
         [[0, 1],
@@ -196,13 +196,21 @@ def gen_big_expr_data() -> Iterator[Data]:
             case 6: z_val = z_val_4 >> z_val_5
             case 7: z_val = z_val_4 << z_val_5
 
-
-        x = torch.tensor([[x_val], [-1.], [y_val], [z_val_0],
-                          [x_val], [-1.], [y_val], [z_val_1],
-                          [x_val], [-1.], [y_val], [z_val_2],
-                          [x_val], [-1.], [y_val], [z_val_3],
-                          [-1.], [z_val_4], [-1.], [z_val_5],
-                          [-1.], [z_val]], dtype=torch.float)
+        # if testing is enabled, the interim results will not be provided
+        if testing:
+            x = torch.tensor([[x_val], [-1.], [y_val], [0],
+                              [x_val], [-1.], [y_val], [0],
+                              [x_val], [-1.], [y_val], [0],
+                              [x_val], [-1.], [y_val], [0],
+                              [-1.], [z_val_4], [-1.], [0],
+                              [-1.], [z_val]], dtype=torch.float)
+        else:
+            x = torch.tensor([[x_val], [-1.], [y_val], [z_val_0],
+                            [x_val], [-1.], [y_val], [z_val_1],
+                            [x_val], [-1.], [y_val], [z_val_2],
+                            [x_val], [-1.], [y_val], [z_val_3],
+                            [-1.], [z_val_4], [-1.], [z_val_5],
+                            [-1.], [z_val]], dtype=torch.float)
 
         y = torch.tensor([op_0, op_1, op_2, op_3, op_4, op_5, op_6], dtype=torch.long)
 
