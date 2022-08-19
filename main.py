@@ -16,10 +16,11 @@ from utils.datasets import gen_expr_data, gen_big_expr_data
 torch.backends.cudnn.benchmark = True
 
 DATA_PATH = "./data/"
+MODEL_PATH = "./models/gat_model"
 DATASET_SIZE = 10000
 
 
-def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool) -> None:
+def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool, test: bool, res: bool) -> None:
     """main function for lda stability testing"""
     start = time.perf_counter()
 
@@ -32,18 +33,28 @@ def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool) -> None:
         device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
     print("\n\n\n"+"#"*75)
-    print("## " + str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
+    print("## Date: " + str(datetime.datetime.now().strftime("%A, %d. %B %Y %I:%M%p")))
     print(f"## System: {torch.get_num_threads()} CPU cores with "
           f"{os.cpu_count()} threads and "
-          f"{torch.cuda.device_count()} GPUs on {socket.gethostname()}")
-    print(f"## Using: {device}")
-    print(f"## Training for {epochs} epochs with batch size {batch_size}")
+          f"{torch.cuda.device_count()} GPU(s)")
+    print(f"## Hostname: {socket.gethostname()}")
+    print(f"## Device: {device}")
+    print(f"## Epochs: {epochs}")
+    print(f"## Batch Size: {batch_size}")
+    print(f"## Learning Rate: {lr}")
+    print(f"## Big Dataset: {big}")
+    print(f"## Only Test: {test}")
     print("#"*75)
     print()
 
     temp_data = next(gen_big_expr_data(testing=False) if big else gen_expr_data())
     model = GATNetwork(temp_data.num_features, 16, temp_data.num_classes).to(device)
-    _ = train_model(model, epochs, device, lr, big)
+    if test:
+        if os.path.isfile(MODEL_PATH):
+            model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)
+            model.load_state_dict(model_state["model"], strict=True)
+
+    _ = train_model(model, epochs, device, lr, big, test, res)
 
 
     # ---------------- Create Mapping Dataset -------------
@@ -67,6 +78,9 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     parser.add_argument("--lr", help="learning rate", type=float, default=0.00005)
     parser.add_argument("--big", "-b", help="enable big graph", action="store_true", default=False)
+    parser.add_argument("--test", "-t", help="test the saved model", action="store_true", default=False)
+    parser.add_argument("--res", "-r", help="remove interim result nodes", action="store_true", default=False)
     args = parser.parse_args()
     main(**vars(args))
+
 

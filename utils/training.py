@@ -6,7 +6,7 @@ import numpy as np
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
-from utils.datasets import gen_expr_data, gen_big_expr_data, operation_dict
+from utils.datasets import gen_expr_data, gen_big_expr_data, operation_dict, gen_res_expr_data
 
 MODEL_PATH = "models/"
 
@@ -54,7 +54,9 @@ def train_model(model: torch.nn.Module,
                 epochs: int,
                 device: str,
                 learning_rate: float,
-                big: bool) -> None:
+                big: bool,
+                test: bool,
+                res: bool) -> None:
     """
     Helper function to train a given model on a given datasetmodel
     
@@ -71,8 +73,12 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
-    data_gen = gen_big_expr_data(testing=False) if big else gen_expr_data()
-    data_gen_test = gen_big_expr_data(testing=True) if big else gen_expr_data()
+    if res:
+        data_gen = gen_res_expr_data() if big else gen_expr_data()
+        data_gen_test = gen_res_expr_data() if big else gen_expr_data()
+    else:
+        data_gen = gen_big_expr_data(testing=True) if big else gen_expr_data()
+        data_gen_test = gen_big_expr_data(testing=True) if big else gen_expr_data()
 
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
@@ -80,25 +86,25 @@ def train_model(model: torch.nn.Module,
     loss_fn = nn.CrossEntropyLoss()
     running_loss = 0.0
 
-    print("\n[[ Training ]]")
+    if not test:
+        print("\n[[ Training ]]")
+        for epoch in range(epochs):
+            model.train()
 
-    for epoch in range(epochs):
-        model.train()
+            data = next(data_gen).to(device)
+            prediction = model(data.x, data.edge_index)
+            loss = loss_fn(prediction[data.train_mask], data.y)
 
-        data = next(data_gen).to(device)
-        prediction = model(data.x, data.edge_index)
-        loss = loss_fn(prediction[data.train_mask], data.y)
+            # Backpropagation
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            # accuray calculation
+            running_loss += loss.item()
+            print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
 
-        # accuray calculation
-        running_loss += loss.item()
-        print(f"Epoch: {epoch} | Loss: {running_loss/(epoch+1):.4f}", end="\r")
-
-    save_model(model, "gat_model")
+        save_model(model, "gat_model")
 
     print("\n\n[[ Testing ]]")
     model.eval()

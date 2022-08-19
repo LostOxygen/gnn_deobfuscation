@@ -220,3 +220,150 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
         data.num_classes = len(operation_dict)
 
         yield data
+
+
+def gen_res_expr_data() -> Iterator[Data]:
+    edge_index = torch.tensor(
+        # 1 is the operation
+        [[0, 1],
+         [2, 1],
+        # 4 is the operation
+         [3, 4],
+         [5, 4],
+        # 8 is the operation
+         [6, 7],
+         [8, 7],
+        # 10 is the operation
+         [9, 10],
+         [11, 10],
+        # 12 is the operation
+         [1, 12],
+         [4, 12],
+        # 13 is the operation
+         [7, 13],
+         [10, 13],
+        # 14 is the operation
+         [12, 14],
+         [13, 14],
+        # 15 is the output
+         [14, 15],
+        # inverse edges from the output to the input nodes
+         [15, 0],
+         [15, 2],
+         [15, 3],
+         [15, 5],
+         [15, 6],
+         [15, 8],
+         [15, 9],
+         [15, 11]],
+        dtype=torch.long).t().contiguous()
+
+    while True:
+        train_mask = torch.tensor([False, True, False,
+                                   False, True, False,
+                                   False, True, False,
+                                   False, True, False,
+                                   True, True, True, False], dtype=torch.bool)
+
+        test_mask = torch.tensor([False, True, False,
+                                  False, True, False,
+                                  False, True, False,
+                                  False, True, False,
+                                  True, True, True, False], dtype=torch.bool)
+
+        x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
+        y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
+
+        op_0 = torch.randint(0, len(operation_dict), (1,)).item()
+        op_1 = torch.randint(0, len(operation_dict), (1,)).item()
+        op_2 = torch.randint(0, len(operation_dict), (1,)).item()
+        op_3 = torch.randint(0, len(operation_dict), (1,)).item()
+        op_4 = torch.randint(0, len(operation_dict), (1,)).item()
+        op_5 = torch.randint(0, len(operation_dict), (1,)).item()
+        op_6 = torch.randint(0, len(operation_dict), (1,)).item()
+
+        match op_0:
+            case 0: z_val_0 = x_val + y_val
+            case 1: z_val_0 = x_val - y_val
+            case 2: z_val_0 = x_val * y_val
+            case 3: z_val_0 = x_val & y_val
+            case 4: z_val_0 = x_val | y_val
+            case 5: z_val_0 = x_val ^ y_val
+            case 6: z_val_0 = x_val >> y_val
+            case 7: z_val_0 = x_val << y_val
+
+        match op_1:
+            case 0: z_val_1 = x_val + y_val
+            case 1: z_val_1 = x_val - y_val
+            case 2: z_val_1 = x_val * y_val
+            case 3: z_val_1 = x_val & y_val
+            case 4: z_val_1 = x_val | y_val
+            case 5: z_val_1 = x_val ^ y_val
+            case 6: z_val_1 = x_val >> y_val
+            case 7: z_val_1 = x_val << y_val
+
+        match op_2:
+            case 0: z_val_2 = x_val + y_val
+            case 1: z_val_2 = x_val - y_val
+            case 2: z_val_2 = x_val * y_val
+            case 3: z_val_2 = x_val & y_val
+            case 4: z_val_2 = x_val | y_val
+            case 5: z_val_2 = x_val ^ y_val
+            case 6: z_val_2 = x_val >> y_val
+            case 7: z_val_2 = x_val << y_val
+
+        match op_3:
+            case 0: z_val_3 = x_val + y_val
+            case 1: z_val_3 = x_val - y_val
+            case 2: z_val_3 = x_val * y_val
+            case 3: z_val_3 = x_val & y_val
+            case 4: z_val_3 = x_val | y_val
+            case 5: z_val_3 = x_val ^ y_val
+            case 6: z_val_3 = x_val >> y_val
+            case 7: z_val_3 = x_val << y_val
+
+        match op_4:
+            case 0: z_val_4 = z_val_0 + z_val_1
+            case 1: z_val_4 = z_val_0 - z_val_1
+            case 2: z_val_4 = z_val_0 * z_val_1
+            case 3: z_val_4 = z_val_0 & z_val_1
+            case 4: z_val_4 = z_val_0 | z_val_1
+            case 5: z_val_4 = z_val_0 ^ z_val_1
+            case 6: z_val_4 = z_val_0 >> z_val_1
+            case 7: z_val_4 = z_val_0 << z_val_1
+
+        match op_5:
+            case 0: z_val_5 = z_val_2 + z_val_3
+            case 1: z_val_5 = z_val_2 - z_val_3
+            case 2: z_val_5 = z_val_2 * z_val_3
+            case 3: z_val_5 = z_val_2 & z_val_3
+            case 4: z_val_5 = z_val_2 | z_val_3
+            case 5: z_val_5 = z_val_2 ^ z_val_3
+            case 6: z_val_5 = z_val_2 >> z_val_3
+            case 7: z_val_5 = z_val_2 << z_val_3
+
+        match op_6:
+            case 0: z_val = z_val_4 + z_val_5
+            case 1: z_val = z_val_4 - z_val_5
+            case 2: z_val = z_val_4 * z_val_5
+            case 3: z_val = z_val_4 & z_val_5
+            case 4: z_val = z_val_4 | z_val_5
+            case 5: z_val = z_val_4 ^ z_val_5
+            case 6: z_val = z_val_4 >> z_val_5
+            case 7: z_val = z_val_4 << z_val_5
+
+        x = torch.tensor([[x_val], [-1.], [y_val],
+                            [x_val], [-1.], [y_val],
+                            [x_val], [-1.], [y_val],
+                            [x_val], [-1.], [y_val],
+                            [-1.], [-1.], [-1.], [z_val]],
+                            dtype=torch.float)
+
+        y = torch.tensor([op_0, op_1, op_2, op_3, op_4,op_5, op_6], dtype=torch.long)
+
+        data = Data(x=x, y=y, edge_index=edge_index)
+        data.train_mask = train_mask
+        data.test_mask = test_mask
+        data.num_classes = len(operation_dict)
+
+        yield data
