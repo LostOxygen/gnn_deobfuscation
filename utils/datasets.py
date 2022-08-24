@@ -10,8 +10,18 @@ operation_dict = {
     3: "and",
     4: "or",
     5: "xor",
-    6: "shr",
+    #6: "shr",
     # 8: "NOP",  # identity mapping / no operation
+}
+
+expr_dict = {
+    0: "+",
+    1: "-",
+    2: "*",
+    3: "&",
+    4: "|",
+    5: "^",
+    #6: ">>"
 }
 
 def gen_expr_data() -> Iterator[Data]:
@@ -198,11 +208,11 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
 
         # if testing is enabled, the interim results will not be provided
         if testing:
-            x = torch.tensor([[x_val], [-1.], [y_val], [0],
-                              [x_val], [-1.], [y_val], [0],
-                              [x_val], [-1.], [y_val], [0],
-                              [x_val], [-1.], [y_val], [0],
-                              [-1.], [z_val_4], [-1.], [0],
+            x = torch.tensor([[x_val], [-1.], [y_val], [-1],
+                              [x_val], [-1.], [y_val], [-1],
+                              [x_val], [-1.], [y_val], [-1],
+                              [x_val], [-1.], [y_val], [-1],
+                              [-1.], [z_val_4], [-1.], [-1],
                               [-1.], [z_val]], dtype=torch.float)
         else:
             x = torch.tensor([[x_val], [-1.], [y_val], [z_val_0],
@@ -215,6 +225,13 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
         y = torch.tensor([op_0, op_1, op_2, op_3, op_4, op_5, op_6], dtype=torch.long)
 
         data = Data(x=x, y=y, edge_index=edge_index)
+        data.x_val = x_val
+        data.y_val = y_val
+        data.z_val = z_val
+        data.expr_str = f"(({x_val.item()} {expr_dict[op_0]} {y_val.item()}) {expr_dict[op_4]} " \
+                        f"({x_val.item()} {expr_dict[op_1]} {y_val.item()})) {expr_dict[op_6]} " \
+                        f"(({x_val.item()} {expr_dict[op_2]} {y_val.item()}) {expr_dict[op_5]} " \
+                        f"({x_val.item()} {expr_dict[op_3]} {y_val.item()}))"
         data.train_mask = train_mask
         data.test_mask = test_mask
         data.num_classes = len(operation_dict)
@@ -282,75 +299,11 @@ def gen_res_expr_data() -> Iterator[Data]:
         op_5 = torch.randint(0, len(operation_dict), (1,)).item()
         op_6 = torch.randint(0, len(operation_dict), (1,)).item()
 
-        match op_0:
-            case 0: z_val_0 = x_val + y_val
-            case 1: z_val_0 = x_val - y_val
-            case 2: z_val_0 = x_val * y_val
-            case 3: z_val_0 = x_val & y_val
-            case 4: z_val_0 = x_val | y_val
-            case 5: z_val_0 = x_val ^ y_val
-            case 6: z_val_0 = x_val >> y_val
-            case 7: z_val_0 = x_val << y_val
-
-        match op_1:
-            case 0: z_val_1 = x_val + y_val
-            case 1: z_val_1 = x_val - y_val
-            case 2: z_val_1 = x_val * y_val
-            case 3: z_val_1 = x_val & y_val
-            case 4: z_val_1 = x_val | y_val
-            case 5: z_val_1 = x_val ^ y_val
-            case 6: z_val_1 = x_val >> y_val
-            case 7: z_val_1 = x_val << y_val
-
-        match op_2:
-            case 0: z_val_2 = x_val + y_val
-            case 1: z_val_2 = x_val - y_val
-            case 2: z_val_2 = x_val * y_val
-            case 3: z_val_2 = x_val & y_val
-            case 4: z_val_2 = x_val | y_val
-            case 5: z_val_2 = x_val ^ y_val
-            case 6: z_val_2 = x_val >> y_val
-            case 7: z_val_2 = x_val << y_val
-
-        match op_3:
-            case 0: z_val_3 = x_val + y_val
-            case 1: z_val_3 = x_val - y_val
-            case 2: z_val_3 = x_val * y_val
-            case 3: z_val_3 = x_val & y_val
-            case 4: z_val_3 = x_val | y_val
-            case 5: z_val_3 = x_val ^ y_val
-            case 6: z_val_3 = x_val >> y_val
-            case 7: z_val_3 = x_val << y_val
-
-        match op_4:
-            case 0: z_val_4 = z_val_0 + z_val_1
-            case 1: z_val_4 = z_val_0 - z_val_1
-            case 2: z_val_4 = z_val_0 * z_val_1
-            case 3: z_val_4 = z_val_0 & z_val_1
-            case 4: z_val_4 = z_val_0 | z_val_1
-            case 5: z_val_4 = z_val_0 ^ z_val_1
-            case 6: z_val_4 = z_val_0 >> z_val_1
-            case 7: z_val_4 = z_val_0 << z_val_1
-
-        match op_5:
-            case 0: z_val_5 = z_val_2 + z_val_3
-            case 1: z_val_5 = z_val_2 - z_val_3
-            case 2: z_val_5 = z_val_2 * z_val_3
-            case 3: z_val_5 = z_val_2 & z_val_3
-            case 4: z_val_5 = z_val_2 | z_val_3
-            case 5: z_val_5 = z_val_2 ^ z_val_3
-            case 6: z_val_5 = z_val_2 >> z_val_3
-            case 7: z_val_5 = z_val_2 << z_val_3
-
-        match op_6:
-            case 0: z_val = z_val_4 + z_val_5
-            case 1: z_val = z_val_4 - z_val_5
-            case 2: z_val = z_val_4 * z_val_5
-            case 3: z_val = z_val_4 & z_val_5
-            case 4: z_val = z_val_4 | z_val_5
-            case 5: z_val = z_val_4 ^ z_val_5
-            case 6: z_val = z_val_4 >> z_val_5
-            case 7: z_val = z_val_4 << z_val_5
+        expr = f"(({x_val.item()} {expr_dict[op_0]} {y_val.item()}) {expr_dict[op_4]} " \
+               f"({x_val.item()} {expr_dict[op_1]} {y_val.item()})) {expr_dict[op_6]} " \
+               f"(({x_val.item()} {expr_dict[op_2]} {y_val.item()}) {expr_dict[op_5]} " \
+               f"({x_val.item()} {expr_dict[op_3]} {y_val.item()}))"
+        z_val = eval(expr)
 
         x = torch.tensor([[x_val], [-1.], [y_val],
                             [x_val], [-1.], [y_val],

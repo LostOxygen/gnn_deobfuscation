@@ -15,13 +15,10 @@ from utils.datasets import gen_expr_data, gen_big_expr_data
 
 torch.backends.cudnn.benchmark = True
 
-DATA_PATH = "./data/"
 MODEL_PATH = "./models/gat_model"
-DATASET_SIZE = 10000
-
 
 def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool, test: bool, res: bool) -> None:
-    """main function for lda stability testing"""
+    """main function for gnn training"""
     start = time.perf_counter()
 
     device = "cpu"

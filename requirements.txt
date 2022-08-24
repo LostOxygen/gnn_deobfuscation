@@ -15,3 +15,4 @@ webdataset
 pkbar
 einops
 rotary-embedding-torch
+sympy
