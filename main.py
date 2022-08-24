@@ -54,16 +54,7 @@ def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool, test: boo
             model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)
             model.load_state_dict(model_state["model"], strict=True)
 
-    _ = train_model(model, epochs, device, lr, big, test, res)
-
-
-    # ---------------- Create Mapping Dataset -------------
-    # if not os.path.isfile(DATA_PATH+"train_data.tar"):
-    #     create_datasets(DATASET_SIZE, int(DATASET_SIZE*0.2), device, epochs)
-
-    # ---------------- Train Mapping Model ----------------
-    # model = MappingModel()
-    # train_mapping(model, 100, device)
+    train_model(model, epochs, device, lr, big, test, res)
 
 
     end = time.perf_counter()
