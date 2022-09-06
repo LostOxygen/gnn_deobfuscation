@@ -45,7 +45,7 @@ def main(gpu: int) -> None:
         y = expr_data.y_val.item()
         z = expr_data.z_val.item()
 
-        print("\n <<< Data >>>")
+        print("\n<<< Data >>>")
         print("x:", x)
         print("y:", y)
         print("z:", z)

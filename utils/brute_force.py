@@ -127,7 +127,7 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data) -> Tuple[bool, int, floa
 
 
 def re_eval(expr: str, expr_orig: str) -> bool:
-    for _ in range(1000):
+    for _ in range(10000):
         expr_a = copy(expr)
         expr_b = copy(expr_orig)
         x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int).item()
