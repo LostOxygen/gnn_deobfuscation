@@ -53,7 +53,7 @@ def main(gpu: int) -> None:
 
         ### brute force
         print("\n<<< Brute Force >>>")
-        solved, bf_steps, duration, expr = brute_force_exp(x, y, z)
+        solved, bf_steps, duration, expr = brute_force_exp(x, y, z, expr_data)
 
         if solved:
             print(f"Found expression: {expr} = {z}")

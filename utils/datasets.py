@@ -1,5 +1,6 @@
 """library module for providing datasets"""
 from typing import Iterator
+from sympy import symbols
 import torch
 from torch_geometric.data import Data
 
@@ -20,9 +21,9 @@ expr_dict = {
     2: "*",
     3: "&",
     4: "|",
-    5: "^",
-    #6: ">>"
+    5: "^"
 }
+
 
 def gen_expr_data() -> Iterator[Data]:
     edge_index = torch.tensor(
@@ -232,6 +233,10 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
                         f"({x_val.item()} {expr_dict[op_1]} {y_val.item()})) {expr_dict[op_6]} " \
                         f"(({x_val.item()} {expr_dict[op_2]} {y_val.item()}) {expr_dict[op_5]} " \
                         f"({x_val.item()} {expr_dict[op_3]} {y_val.item()}))"
+        data.expr_str_orig = f"((x {expr_dict[op_0]} y) {expr_dict[op_4]} " \
+                             f"(x {expr_dict[op_1]} y)) {expr_dict[op_6]} " \
+                             f"((x {expr_dict[op_2]} y) {expr_dict[op_5]} " \
+                             f"(x {expr_dict[op_3]} y))"
         data.train_mask = train_mask
         data.test_mask = test_mask
         data.num_classes = len(operation_dict)
