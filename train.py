@@ -61,11 +61,11 @@ def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool, test: boo
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gpu", "-g", help="GPU", type=int, default=0)
+    parser.add_argument("--gpu", "-g", help="GPU", type=int, default=-1)
     parser.add_argument("--epochs", "-e", help="number of gnn epochs", type=int, default=1000000)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     parser.add_argument("--lr", help="learning rate", type=float, default=0.00005)
-    parser.add_argument("--big", "-b", help="enable big graph", action="store_true", default=False)
+    parser.add_argument("--big", "-b", help="enable big graph", action="store_true", default=True)
     parser.add_argument("--test", "-t", help="test the saved model", action="store_true", default=False)
     parser.add_argument("--res", "-r", help="remove interim result nodes", action="store_true", default=False)
     args = parser.parse_args()

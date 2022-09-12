@@ -6,17 +6,8 @@ import torch
 from torch import nn
 from torch_geometric.data import Data
 
-from utils.datasets import operation_dict
+from utils.datasets import expr_dict
 
-operation_dict = {
-    0: "+",
-    1: "-",
-    2: "*",
-    3: "&",
-    4: "|",
-    5: "^",
-    #6: ">>"
-}
 
 
 def brute_force_exp(x: int, y: int, z: int, data: Data) -> Tuple[bool, int, float, str]:
@@ -33,13 +24,13 @@ def brute_force_exp(x: int, y: int, z: int, data: Data) -> Tuple[bool, int, floa
     expr_str_orig = data.expr_str_orig
 
     start = time.perf_counter()
-    for op0 in operation_dict.values():
-        for op1 in operation_dict.values():
-            for op2 in operation_dict.values():
-                for op3 in operation_dict.values():
-                    for op4 in operation_dict.values():
-                        for op5 in operation_dict.values():
-                            for op6 in operation_dict.values():
+    for op0 in expr_dict.values():
+        for op1 in expr_dict.values():
+            for op2 in expr_dict.values():
+                for op3 in expr_dict.values():
+                    for op4 in expr_dict.values():
+                        for op5 in expr_dict.values():
+                            for op6 in expr_dict.values():
                                 steps += 1
                                 expr = f"(({x} {op0} {y}) {op4} ({x} {op1} {y})) {op6} " \
                                        f"(({x} {op2} {y}) {op5} ({x} {op3} {y}))"
@@ -83,7 +74,7 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data) -> Tuple[bool, int, floa
         prediction = gnn(data.x, data.edge_index)
 
     ops = []
-    topk_ops = torch.topk(prediction, len(operation_dict))
+    topk_ops = torch.topk(prediction, len(expr_dict))
     for i in range(7):
         tmp_op = [(item0.item(), item1.item()) for item0, item1 in zip(topk_ops.indices[i],
                 	                                                   torch.exp(topk_ops.values[i]))]
@@ -99,14 +90,14 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data) -> Tuple[bool, int, floa
                         for op5 in ops[5]:
                             for op6 in ops[6]:
                                 steps += 1
-                                expr = f"(({x} {operation_dict[op0[0]]} {y}) {operation_dict[op4[0]]} " \
-                                       f"({x} {operation_dict[op1[0]]} {y})) {operation_dict[op6[0]]} " \
-                                       f"(({x} {operation_dict[op2[0]]} {y}) {operation_dict[op5[0]]} " \
-                                       f"({x} {operation_dict[op3[0]]} {y}))"
-                                expr_clean = f"((x {operation_dict[op0[0]]} y) {operation_dict[op4[0]]} " \
-                                             f"(x {operation_dict[op1[0]]} y)) {operation_dict[op6[0]]} " \
-                                             f"((x {operation_dict[op2[0]]} y) {operation_dict[op5[0]]} " \
-                                             f"(x {operation_dict[op3[0]]} y))"
+                                expr = f"(({x} {expr_dict[op0[0]]} {y}) {expr_dict[op4[0]]} " \
+                                       f"({x} {expr_dict[op1[0]]} {y})) {expr_dict[op6[0]]} " \
+                                       f"(({x} {expr_dict[op2[0]]} {y}) {expr_dict[op5[0]]} " \
+                                       f"({x} {expr_dict[op3[0]]} {y}))"
+                                expr_clean = f"((x {expr_dict[op0[0]]} y) {expr_dict[op4[0]]} " \
+                                             f"(x {expr_dict[op1[0]]} y)) {expr_dict[op6[0]]} " \
+                                             f"((x {expr_dict[op2[0]]} y) {expr_dict[op5[0]]} " \
+                                             f"(x {expr_dict[op3[0]]} y))"
                                 try:
                                     result = eval(expr)
                                 except Exception as _:
