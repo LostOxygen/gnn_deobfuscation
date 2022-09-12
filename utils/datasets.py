@@ -1,6 +1,5 @@
 """library module for providing datasets"""
 from typing import Iterator
-from sympy import symbols
 import torch
 from torch_geometric.data import Data
 
