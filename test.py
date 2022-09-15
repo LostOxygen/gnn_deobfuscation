@@ -36,6 +36,12 @@ def main(gpu: int) -> None:
     print("#"*75)
     print()
 
+    tmp_expr_data = next(gen_big_expr_data(testing=False))
+    model = GATNetwork(tmp_expr_data.num_features, 16, tmp_expr_data.num_classes).to(device)
+    if os.path.isfile(MODEL_PATH):
+            model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)
+            model.load_state_dict(model_state["model"], strict=True)
+
     gnn_faster = 0
     avg_percent = 0.0
 
@@ -65,11 +71,6 @@ def main(gpu: int) -> None:
 
         # gnn brute force with extra steps
         print("\n<<< GNN Brute Force >>>")
-        model = GATNetwork(expr_data.num_features, 16, expr_data.num_classes).to(device)
-        if os.path.isfile(MODEL_PATH):
-            model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)
-            model.load_state_dict(model_state["model"], strict=True)
-
         gnn_solved, gnn_bf_steps, gnn_duration, gnn_expr = gnn_brute_force_exp(model, expr_data)
 
         if gnn_solved:

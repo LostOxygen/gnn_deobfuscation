@@ -8,7 +8,7 @@ from torch_geometric.nn import SAGEConv, GCNConv, Sequential, GATv2Conv
 class GATNetwork(torch.nn.Module):
     """Graph attention neural network"""
 
-    def __init__(self, dim_in, dim_h, dim_out, heads=12):
+    def __init__(self, dim_in, dim_h, dim_out, heads=8):
         super().__init__()
         self.gat1 = GATv2Conv(dim_in, dim_h, heads=heads)
         self.gat2 = GATv2Conv(dim_h*heads, dim_h, heads=heads)

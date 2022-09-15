@@ -107,7 +107,16 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
          [19, 20],
          [20, 21],
          [21, 17],
-         [21, 19]],
+         [21, 19],
+        # additional inverse edges
+         [21, 0],
+         [21, 2],
+         [21, 4],
+         [21, 6],
+         [21, 8],
+         [21, 10],
+         [21, 12],
+         [21, 14]],
         dtype=torch.long).t().contiguous()
 
     while True:
