@@ -221,7 +221,7 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
                               [x_val], [-1.], [y_val], [-1],
                               [x_val], [-1.], [y_val], [-1],
                               [x_val], [-1.], [y_val], [-1],
-                              [-1.], [z_val_4], [-1.], [-1],
+                              [-1.], [-1], [-1.], [-1],
                               [-1.], [z_val]], dtype=torch.float)
         else:
             x = torch.tensor([[x_val], [-1.], [y_val], [z_val_0],
