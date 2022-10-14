@@ -113,6 +113,7 @@ def train_model(model: torch.nn.Module,
 
     with torch.no_grad():
         for _ in range(100):
+            # compare predicted operations to true operations
             data = next(data_gen_test).to(device)
             data = data.to(device)
             prediction = model(data.x, data.edge_index)

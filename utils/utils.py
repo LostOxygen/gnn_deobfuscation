@@ -1,3 +1,4 @@
+# deprecated functions which are not used in the current state of the project!
 import os
 import numpy as np
 import torch

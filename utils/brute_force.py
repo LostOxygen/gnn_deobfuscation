@@ -12,6 +12,7 @@ from utils.datasets import expr_dict
 
 def brute_force_exp(x: int, y: int, z: int, data: Data) -> Tuple[bool, int, float, str]:
     """
+    Brute force function which iterates over every possible operation and evaluates it.
     Arguments:
         x: X input value
         y: Y input value
@@ -57,6 +58,7 @@ def brute_force_exp(x: int, y: int, z: int, data: Data) -> Tuple[bool, int, floa
 
 def gnn_brute_force_exp(gnn: nn.Sequential, data: Data) -> Tuple[bool, int, float, str]:
     """
+    Brute force function which utilizes the GNN predicted probabilities for the sinle operations.
     Arguments:
         data: graph input data
     Returns:
@@ -118,6 +120,9 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data) -> Tuple[bool, int, floa
 
 
 def re_eval(expr: str, expr_orig: str) -> bool:
+    """
+    Helper function which re-evaluates the expression with other values to ensure its correctness. 
+    """
     for _ in range(10000):
         expr_a = copy(expr)
         expr_b = copy(expr_orig)

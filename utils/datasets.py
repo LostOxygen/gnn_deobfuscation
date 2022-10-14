@@ -9,8 +9,7 @@ operation_dict = {
     2: "mul",
     3: "and",
     4: "or",
-    5: "xor",
-    #6: "shr",
+    5: "xor"
     # 8: "NOP",  # identity mapping / no operation
 }
 
@@ -23,7 +22,7 @@ expr_dict = {
     5: "^"
 }
 
-
+# smaller example graph 
 def gen_expr_data() -> Iterator[Data]:
     edge_index = torch.tensor(
         [[0, 1],
@@ -64,11 +63,14 @@ def gen_expr_data() -> Iterator[Data]:
         yield data
 
 
+# !!!!!!!!!!!!
+# actual dataset graph as described in the overview
 def gen_big_expr_data(testing: bool) -> Iterator[Data]:
+    # create the graph as an edge list tensor
     edge_index = torch.tensor(
         # 1 is the operation and 3 the result node
         [[0, 1],
-         [2, 1],
+         [2, 1],    
          [1, 3],
          [3, 0],
          [3, 2],
@@ -137,6 +139,7 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
         x_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
         y_val = torch.randint(0, 2**8-1, (1,), dtype=torch.int)
 
+        # choose operations
         op_0 = torch.randint(0, len(operation_dict), (1,)).item()
         op_1 = torch.randint(0, len(operation_dict), (1,)).item()
         op_2 = torch.randint(0, len(operation_dict), (1,)).item()
@@ -145,76 +148,16 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
         op_5 = torch.randint(0, len(operation_dict), (1,)).item()
         op_6 = torch.randint(0, len(operation_dict), (1,)).item()
 
-        match op_0:
-            case 0: z_val_0 = x_val + y_val
-            case 1: z_val_0 = x_val - y_val
-            case 2: z_val_0 = x_val * y_val
-            case 3: z_val_0 = x_val & y_val
-            case 4: z_val_0 = x_val | y_val
-            case 5: z_val_0 = x_val ^ y_val
-            case 6: z_val_0 = x_val >> y_val
-            case 7: z_val_0 = x_val << y_val
-        
-        match op_1:
-            case 0: z_val_1 = x_val + y_val
-            case 1: z_val_1 = x_val - y_val
-            case 2: z_val_1 = x_val * y_val
-            case 3: z_val_1 = x_val & y_val
-            case 4: z_val_1 = x_val | y_val
-            case 5: z_val_1 = x_val ^ y_val
-            case 6: z_val_1 = x_val >> y_val
-            case 7: z_val_1 = x_val << y_val
+        # calculate the interim and final results 
+        z_val_0 = match_op(op_0, x_val, y_val)
+        z_val_1 = match_op(op_1, x_val, y_val)
+        z_val_2 = match_op(op_2, x_val, y_val)
+        z_val_3 = match_op(op_3, x_val, y_val)
+        z_val_4 = match_op(op_4, z_val_0, z_val_1)
+        z_val_5 = match_op(op_5, z_val_2, z_val_3)
+        z_val   = match_op(op_6, z_val_4, z_val_5)
 
-        match op_2:
-            case 0: z_val_2 = x_val + y_val
-            case 1: z_val_2 = x_val - y_val
-            case 2: z_val_2 = x_val * y_val
-            case 3: z_val_2 = x_val & y_val
-            case 4: z_val_2 = x_val | y_val
-            case 5: z_val_2 = x_val ^ y_val
-            case 6: z_val_2 = x_val >> y_val
-            case 7: z_val_2 = x_val << y_val
-
-        match op_3:
-            case 0: z_val_3 = x_val + y_val
-            case 1: z_val_3 = x_val - y_val
-            case 2: z_val_3 = x_val * y_val
-            case 3: z_val_3 = x_val & y_val
-            case 4: z_val_3 = x_val | y_val
-            case 5: z_val_3 = x_val ^ y_val
-            case 6: z_val_3 = x_val >> y_val
-            case 7: z_val_3 = x_val << y_val
-
-        match op_4:
-            case 0: z_val_4 = z_val_0 + z_val_1
-            case 1: z_val_4 = z_val_0 - z_val_1
-            case 2: z_val_4 = z_val_0 * z_val_1
-            case 3: z_val_4 = z_val_0 & z_val_1
-            case 4: z_val_4 = z_val_0 | z_val_1
-            case 5: z_val_4 = z_val_0 ^ z_val_1
-            case 6: z_val_4 = z_val_0 >> z_val_1
-            case 7: z_val_4 = z_val_0 << z_val_1
-
-        match op_5:
-            case 0: z_val_5 = z_val_2 + z_val_3
-            case 1: z_val_5 = z_val_2 - z_val_3
-            case 2: z_val_5 = z_val_2 * z_val_3
-            case 3: z_val_5 = z_val_2 & z_val_3
-            case 4: z_val_5 = z_val_2 | z_val_3
-            case 5: z_val_5 = z_val_2 ^ z_val_3
-            case 6: z_val_5 = z_val_2 >> z_val_3
-            case 7: z_val_5 = z_val_2 << z_val_3
-
-        match op_6:
-            case 0: z_val = z_val_4 + z_val_5
-            case 1: z_val = z_val_4 - z_val_5
-            case 2: z_val = z_val_4 * z_val_5
-            case 3: z_val = z_val_4 & z_val_5
-            case 4: z_val = z_val_4 | z_val_5
-            case 5: z_val = z_val_4 ^ z_val_5
-            case 6: z_val = z_val_4 >> z_val_5
-            case 7: z_val = z_val_4 << z_val_5
-
+        # create the final value tensors for the graph
         # if testing is enabled, the interim results will not be provided
         if testing:
             x = torch.tensor([[x_val], [-1.], [y_val], [-1],
@@ -234,13 +177,17 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
         y = torch.tensor([op_0, op_1, op_2, op_3, op_4, op_5, op_6], dtype=torch.long)
 
         data = Data(x=x, y=y, edge_index=edge_index)
+        # add input and output variables to the dataset
         data.x_val = x_val
         data.y_val = y_val
         data.z_val = z_val
+        # add the expression as a string to the dataset
         data.expr_str = f"(({x_val.item()} {expr_dict[op_0]} {y_val.item()}) {expr_dict[op_4]} " \
                         f"({x_val.item()} {expr_dict[op_1]} {y_val.item()})) {expr_dict[op_6]} " \
                         f"(({x_val.item()} {expr_dict[op_2]} {y_val.item()}) {expr_dict[op_5]} " \
                         f"({x_val.item()} {expr_dict[op_3]} {y_val.item()}))"
+
+        # add the expression without actual values as a string to the dataset
         data.expr_str_orig = f"((x {expr_dict[op_0]} y) {expr_dict[op_4]} " \
                              f"(x {expr_dict[op_1]} y)) {expr_dict[op_6]} " \
                              f"((x {expr_dict[op_2]} y) {expr_dict[op_5]} " \
@@ -252,6 +199,7 @@ def gen_big_expr_data(testing: bool) -> Iterator[Data]:
         yield data
 
 
+# graph without residual nodes 
 def gen_res_expr_data() -> Iterator[Data]:
     edge_index = torch.tensor(
         # 1 is the operation
@@ -333,3 +281,19 @@ def gen_res_expr_data() -> Iterator[Data]:
         data.num_classes = len(operation_dict)
 
         yield data
+
+def match_op(op, x_val, y_val):
+    """
+    Helper function to match the chosen operation and calculate the corresponding next value
+    """
+    match op:
+        case 0: z_val = x_val + y_val
+        case 1: z_val = x_val - y_val
+        case 2: z_val = x_val * y_val
+        case 3: z_val = x_val & y_val
+        case 4: z_val = x_val | y_val
+        case 5: z_val = x_val ^ y_val
+        case 6: z_val = x_val >> y_val
+        case 7: z_val = x_val << y_val
+
+    return z_val
