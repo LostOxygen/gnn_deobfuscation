@@ -28,6 +28,11 @@ VARS_SET = set(string.ascii_lowercase)
 KNOWN_VARS = {"x", "y", "z", "t", "s"}
 
 
+def save(file_: Path, data: Iterable[str]) -> None:
+    with open(file_, "w", encoding="utf-8") as f:
+        f.writelines(sorted(list(data), key=lambda e: len(e)))
+
+
 def get_vars(line: str) -> Set[str]:
     return VARS_SET.intersection(set(line))
 
@@ -113,8 +118,7 @@ def neureduce() -> None:
     neureduce_out_dir.mkdir()
     for num_vars, data in vars_to_data.items():
         print(f"NeuReduce: Saving {len(data)} for {num_vars} variables")
-        with open(neureduce_out_dir / f"neureduce_vars_{num_vars}.txt", "w", encoding="utf-8") as f:
-            f.writelines(sorted(list(data), key=lambda e: len(e), reverse=True))
+        save(neureduce_out_dir / f"neureduce_vars_{num_vars}.txt", data)
 
 
 def mbablast() -> None:
@@ -140,8 +144,7 @@ def mbablast() -> None:
     mbablast_out_dir.mkdir()
     for num_vars, data in vars_to_data.items():
         print(f"MBA-Blast: Saving {len(data)} for {num_vars} variables")
-        with open(mbablast_out_dir / f"mbablast_vars_{num_vars}.txt", "w", encoding="utf-8") as f:
-            f.writelines(sorted(list(data), key=lambda e: len(e), reverse=True))
+        save(mbablast_out_dir / f"mbablast_vars_{num_vars}.txt", data)
 
 
 def mbaobfuscator() -> None:
@@ -169,8 +172,7 @@ def mbaobfuscator() -> None:
     mbaobfuscator_out_dir.mkdir()
     for num_vars, data in vars_to_data.items():
         print(f"MBA-Obfuscator: Saving {len(data)} for {num_vars} variables")
-        with open(mbaobfuscator_out_dir / f"mbaobfuscator_vars_{num_vars}.txt", "w", encoding="utf-8") as f:
-            f.writelines(sorted(list(data), key=lambda e: len(e), reverse=True))
+        save(mbaobfuscator_out_dir / f"mbaobfuscator_vars_{num_vars}.txt", data)
 
 
 def loki() -> None:
