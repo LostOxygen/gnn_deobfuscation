@@ -30,6 +30,7 @@ UNIFIED_OUT_DIR = OUT_DIR / "unified"
 # set of variable characters we can handle
 VARS_SET = set(string.ascii_lowercase)
 KNOWN_VARS = {"x", "y", "z", "t", "s"}
+KNOWN_OPS = {"+", "-", "*", "&", "|", "^"}
 
 
 def save(file_: Path, data: Iterable[str]) -> None:
@@ -216,6 +217,29 @@ def loki() -> None:
         save(loki_out_dir / f"loki_vars_2_depth_{depth}.txt", data)
 
 
+def verify_ops(expr: str, vars: Set[str]) -> bool:
+    """
+    Filter out unsupported operations from simplified expression
+    """
+    allowed_chars = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "(", ")", " "}
+    compl_expr, simp_expr = expr.split(",", 1)
+    # diff = set(compl_expr)\
+    #                     .difference(vars)\
+    #                     .difference(KNOWN_OPS)\
+    #                     .difference(allowed_chars)
+    # if diff:
+    #     print(f"[!] Complex expression contains unsupported operation(s): {diff}")
+    #     return False
+    diff = set(simp_expr.strip())\
+                        .difference(vars)\
+                        .difference(KNOWN_OPS)\
+                        .difference(allowed_chars)
+    if diff:
+        print(f"[!] Simplified expression contains unsupported operation(s): {diff}")
+        return False
+    return True
+
+
 def unify_dataset() -> None:
     """
     Unify MBAs of all tools into a unified sets of MBAs (one set per variable number)
@@ -234,6 +258,9 @@ def unify_dataset() -> None:
                 line = line.rstrip(",True").rstrip(",False")
                 assert line.count(",") == 1, f"Counted {line.count(',')} comma characters, expected 1: {line}"
                 vars = get_vars(line)
+                if not verify_ops(line, vars):
+                    print(f"[!] Skipping due to unsupported ops: {line}")
+                    continue
                 assert vars == set(sort_variables(KNOWN_VARS)[:len(vars)]), \
                         f"Set mismatch: found {vars} but expected {KNOWN_VARS}"
                 assert "x" in line, f"Expected variable x to be present: {line}"
@@ -251,11 +278,10 @@ def split_by_operation(dataset: List[str]) -> Dict[int, List[str]]:
     Given a dataset containing lines of format 'obfuscated_expr, simplified_expr',
     return a dict mapping number of operations to expressions with that number
     """
-    supported_ops = {"+", "-", "*", "&", "|", "^"}
     exprs_by_ops = defaultdict(list)
     for expr in dataset:
         _, simplified_expr = expr.split(",", 1)
-        num_ops = len([c for c in simplified_expr if c in supported_ops])
+        num_ops = len([c for c in simplified_expr if c in KNOWN_OPS])
         exprs_by_ops[num_ops].append(expr)
     return exprs_by_ops
 
