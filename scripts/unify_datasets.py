@@ -223,13 +223,13 @@ def verify_ops(expr: str, vars: Set[str]) -> bool:
     """
     allowed_chars = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "(", ")", " "}
     compl_expr, simp_expr = expr.split(",", 1)
-    # diff = set(compl_expr)\
-    #                     .difference(vars)\
-    #                     .difference(KNOWN_OPS)\
-    #                     .difference(allowed_chars)
-    # if diff:
-    #     print(f"[!] Complex expression contains unsupported operation(s): {diff}")
-    #     return False
+    diff = set(compl_expr)\
+                        .difference(vars)\
+                        .difference(KNOWN_OPS)\
+                        .difference(allowed_chars)
+    if diff:
+        print(f"[!] Complex expression contains unsupported operation(s): {diff}")
+        return False
     diff = set(simp_expr.strip())\
                         .difference(vars)\
                         .difference(KNOWN_OPS)\
@@ -280,8 +280,8 @@ def split_by_operation(dataset: List[str]) -> Dict[int, List[str]]:
     """
     exprs_by_ops = defaultdict(list)
     for expr in dataset:
-        _, simplified_expr = expr.split(",", 1)
-        num_ops = len([c for c in simplified_expr if c in KNOWN_OPS])
+        comp_expr, _ = expr.split(",", 1)
+        num_ops = len([c for c in comp_expr if c in KNOWN_OPS])
         exprs_by_ops[num_ops].append(expr)
     return exprs_by_ops
 
