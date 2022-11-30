@@ -6,8 +6,7 @@ import numpy as np
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
-from utils.datasets import gen_expr_data, gen_big_expr_data, operation_dict, gen_res_expr_data
-
+from utils.datasets import gen_expr_graph, operation_dict
 MODEL_PATH = "models/"
 
 
@@ -54,9 +53,8 @@ def train_model(model: torch.nn.Module,
                 epochs: int,
                 device: str,
                 learning_rate: float,
-                big: bool,
-                test: bool,
-                res: bool) -> None:
+                num_ops: int,
+                test: bool):
     """
     Helper function to train a given model on a given datasetmodel
     
@@ -73,13 +71,8 @@ def train_model(model: torch.nn.Module,
     print("[[ Network Architecture ]]")
     print(model)
 
-    if res:
-        data_gen = gen_res_expr_data() if big else gen_expr_data()
-        data_gen_test = gen_res_expr_data() if big else gen_expr_data()
-    else:
-        data_gen = gen_big_expr_data(testing=True) if big else gen_expr_data()
-        data_gen_test = gen_big_expr_data(testing=True) if big else gen_expr_data()
-
+    data_gen = gen_expr_graph(num_ops)
+    data_gen_test = gen_expr_graph(num_ops)
 
     #data_loader = get_dataloader(dataset, batch_size=batch_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=5e-4)

@@ -11,13 +11,13 @@ import numpy as np
 
 from utils.training import train_model
 from utils.models import GATNetwork
-from utils.datasets import gen_expr_data, gen_big_expr_data
+from utils.datasets import gen_expr_graph
 
 torch.backends.cudnn.benchmark = True
 
 MODEL_PATH = "./models/gat_model"
 
-def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool, test: bool, res: bool) -> None:
+def main(gpu: int, epochs: int, batch_size: int, lr: float, test: bool, num_ops: int) -> None:
     """main function for gnn training"""
     start = time.perf_counter()
 
@@ -39,19 +39,19 @@ def main(gpu: int, epochs: int, batch_size: int, lr: float, big: bool, test: boo
     print(f"## Epochs: {epochs}")
     print(f"## Batch Size: {batch_size}")
     print(f"## Learning Rate: {lr}")
-    print(f"## Big Dataset: {big}")
+    print(f"## Number Operations: {num_ops}")
     print(f"## Only Test: {test}")
     print("#"*75)
     print()
 
-    temp_data = next(gen_big_expr_data(testing=False) if big else gen_expr_data())
+    temp_data = next(gen_expr_graph(num_ops))
     model = GATNetwork(temp_data.num_features, 16, temp_data.num_classes).to(device)
     if test:
         if os.path.isfile(MODEL_PATH):
             model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)
             model.load_state_dict(model_state["model"], strict=True)
 
-    train_model(model, epochs, device, lr, big, test, res)
+    train_model(model, epochs, device, lr, num_ops, test)
 
 
     end = time.perf_counter()
@@ -65,9 +65,10 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", "-e", help="number of gnn epochs", type=int, default=1000000)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     parser.add_argument("--lr", help="learning rate", type=float, default=0.00005)
-    parser.add_argument("--big", "-b", help="enable big graph", action="store_true", default=True)
+    parser.add_argument("--num_ops", help="number of operations", type=int, default=15)
+    #parser.add_argument("--big", "-b", help="enable big graph", action="store_true", default=True)
     parser.add_argument("--test", "-t", help="test the saved model", action="store_true", default=False)
-    parser.add_argument("--res", "-r", help="remove interim result nodes", action="store_true", default=False)
+    #parser.add_argument("--res", "-r", help="remove interim result nodes", action="store_true", default=False)
     args = parser.parse_args()
     main(**vars(args))
 
