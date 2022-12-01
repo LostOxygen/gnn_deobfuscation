@@ -1,5 +1,6 @@
 """library module for providing brute force functions"""
 import time
+import re
 from itertools import product
 from copy import copy
 from typing import Tuple
@@ -111,8 +112,10 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data, num_ops: int) -> Tuple[b
         brute_expr_str = copy(data.expr_str)
         # replace the placeholder operations accordingly
         for idx, op in enumerate(op_comb):
-            brute_expr_str = brute_expr_str.replace(
-                f"op{idx}", f"{expr_dict[op]}", 1)
+            brute_expr_str = re.sub(r"\b%s\b" % f"op{idx}",
+                                    f"{expr_dict[op]}",
+                                    brute_expr_str, 1)
+            # brute_expr_str = brute_expr_str.replace(f"op{idx}", f"{expr_dict[op]}", 1)
 
         try:
             brute_expr_str_w_vals = copy(brute_expr_str)

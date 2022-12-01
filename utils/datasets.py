@@ -1,4 +1,5 @@
 """library module for providing datasets"""
+import re
 from typing import Iterator, List, Tuple
 import torch
 from torch_geometric.data import Data
@@ -163,7 +164,6 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
 
         # get randomized operations
         operations = torch.zeros(num_operations, dtype=torch.long)
-        interim_results = torch.zeros(len(interim_nodes), dtype=torch.int32)
         # fill the operation vector accordingly
         for i in range(num_operations):
             operations[i] = torch.randint(0, len(operation_dict), (1,)).item()
@@ -171,7 +171,9 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
         # replace the operation placeholders with actual operations
         placeholder_str = expr_str
         for idx, op in enumerate(operations):
-            expr_str = expr_str.replace(f"op{idx}", f"{expr_dict[op.item()]}", 1)
+            expr_str = re.sub(r"\b%s\b" % f"op{idx}",
+                              f"{expr_dict[op.item()]}",
+                              expr_str, 1)
 
         # calculate the resulting value
         expr_str_w_vals = expr_str.replace("x", f"{x_val.item()}")
