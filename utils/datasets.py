@@ -1,5 +1,5 @@
 """library module for providing datasets"""
-from typing import Iterator
+from typing import Iterator, List, Tuple
 import torch
 from torch_geometric.data import Data
 
@@ -152,7 +152,7 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
     # finally extract the single left expression
     expr_str = tmp_expr_list[0]
 
-    print(f"expression string: {expr_str}")
+    # print(f"expression string: {expr_str}")
 
     # generate the actual data
     tmp_vals = [[-1]]*num_nodes
@@ -192,17 +192,21 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
         # output variables
         x[-1][0] = z_val
         y = operations
+
+        # create the GlobalStorage data object
         data = Data(x=x, y=y, edge_index=edge_index)
+
+        # add extra informations for brute forcing and so on
         data.train_mask = mask
         data.test_mask = mask
         data.num_classes = len(operation_dict)
+        data.x_val = x_val
+        data.y_val = y_val
         data.z_val = z_val
         data.expr_str = expr_str
         data.operations = operations
-        data.nodes_per_stage = nodes_per_stage
 
-        break
-        #yield data
+        yield data
 
 
 def gen_big_expr_data(testing: bool) -> Iterator[Data]:
