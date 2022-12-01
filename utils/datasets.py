@@ -34,10 +34,10 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
     assert num_input_vars % 2 == 0, "Number of input variables must be even"
     num_nodes = num_input_vars + (2*num_operations)
     nodes_per_stage = [int(num_input_vars)]
-    input_nodes = []
-    output_nodes = [int(num_nodes - 1)]
-    operation_nodes = []
-    interim_nodes = []
+    input_nodes: List[int] = []
+    output_nodes: List[int] = [int(num_nodes - 1)]
+    operation_nodes: List[int] = []
+    interim_nodes: List[int] = []
 
     # create the number of nodes per stage in the graph
     node_counter = num_input_vars / 2
@@ -93,7 +93,7 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
     # print("operation nodes: ", operation_nodes)
     # print("interim nodes: ", interim_nodes)
 
-    edge_index = []
+    edge_index: List[Tuple[int]] = []
     # add the input nodes and their edge into the edge list
     for idx, ido in zip(range(0, len(input_nodes), 2), \
         range(0, len(operation_nodes))):
@@ -123,46 +123,36 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
 
     # build the expression string
     expr_str = ""
-    op_insert_state = "left" # state machine to keep track of the next ops position
-    str_state = "left"
-    left_str = ""
-    right_str = ""
-    for input_idx in range(0, num_operations):
-        match op_insert_state:
-            case "left": 
-                if str_state == "left":
-                    left_str += f"((x op{input_idx} y)"
-                elif str_state == "right":
-                    right_str += f"((x op{input_idx} y)"
-                op_insert_state = "right"
+    tmp_expr_list: List[str] = []
+    # to know how many operation nodes there are in the first stage
+    num_used_ops = nodes_per_stage[1] 
 
-            case "middle":
-                if str_state == "left":
-                    left_str = left_str[:int(len(left_str)/2)] + f" op{input_idx} " + left_str[int(len(left_str)/2):]
-                elif str_state == "right":
-                    right_str = right_str[:int(
-                        len(right_str)/2)] + f" op{input_idx} " + right_str[int(len(right_str)/2):]
-                
-                if len(left_str) == len(right_str):
-                    expr_str = "(" + left_str + f" op{input_idx+1} " + right_str + ")"
-                    left_str = ""
-                    right_str = ""
-                elif len(left_str):
-                    str_state = "right"
+    # basically generate a list with all input nodes and their first operation
+    # then merge them together stage by stage until only one term is left
+    # ofc this works only for balanced symmetrical binary trees like this here
+    for idx in range(0, num_input_vars//2):
+        tmp_expr_list.append(f"(x op{idx} y)")
 
-                op_insert_state = "left"
+    # offset is used to move only one operation number higher, while the idx
+    # counter moves two operations further to merge them
+    offset_idx = 0
+    while len(tmp_expr_list) > 1:
+        tmp_list: List[str] = []
+        for idx in range(0, len(tmp_expr_list), 2):
+            # generate the merged expression
+            estr = "(" + tmp_expr_list[idx] + f" op{num_used_ops+offset_idx} " + \
+                tmp_expr_list[idx+1] + ")"
+            
+            tmp_list.append(estr)
+            offset_idx += 1
 
-            case "right":
-                if str_state == "left":
-                    left_str += f"(x op{input_idx} y))"
-                elif str_state == "right":
-                    right_str += f"(x op{input_idx} y))"
-                op_insert_state = "middle"
-        
-    if len(left_str) and len(right_str) == 0:
-        expr_str = left_str
-    
-    # print(f"expression string: {expr_str}")
+        # overwrite the current list with the newly merged expressions
+        tmp_expr_list = tmp_list
+
+    # finally extract the single left expression
+    expr_str = tmp_expr_list[0]
+
+    print(f"expression string: {expr_str}")
 
     # generate the actual data
     tmp_vals = [[-1]]*num_nodes
@@ -209,8 +199,10 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
         data.z_val = z_val
         data.expr_str = expr_str
         data.operations = operations
+        data.nodes_per_stage = nodes_per_stage
 
-        yield data
+        break
+        #yield data
 
 
 def gen_big_expr_data(testing: bool) -> Iterator[Data]:
