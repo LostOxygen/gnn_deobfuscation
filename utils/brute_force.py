@@ -1,5 +1,6 @@
 """library module for providing brute force functions"""
 import time
+from itertools import product
 from copy import copy
 from typing import Tuple
 import torch
@@ -8,66 +9,86 @@ from torch_geometric.data import Data
 
 from utils.datasets import expr_dict
 
+operation_dict = {
+    0: "add",
+    1: "sub",
+    2: "mul",
+    3: "and",
+    4: "or",
+    5: "xor"
+}
 
 
-def brute_force_exp(x: int, y: int, z: int, data: Data) -> Tuple[bool, int, float, str]:
+def brute_force_exp(x: int, y: int, z: int, orig_expr_str: str,
+                    placeholder_str: str, num_ops: int) -> Tuple[bool, int, float, str]:
     """
     Brute force function which iterates over every possible operation and evaluates it.
     Arguments:
         x: X input value
         y: Y input value
-        z: Z input value
+        z: Z output value
+        expr_str: expression string from the graph
+        placeholder_str: expression string with placeholder operations
+        num_ops: number of operations
     Returns:
         Tuple[bool, int, float, str]: solved status, brute force steps and brute force computation time and expr.
     """
+    valid_num_ops = [2**val-1 for val in range(0, num_ops)]
+    assert num_ops in valid_num_ops, "Number of operations must be valid by the term 2^n-1"
+    
     steps = 0
     duration = 0.
-    expr_str_orig = data.expr_str_orig
 
+    # iterate over every combination of operations for the whole expression
     start = time.perf_counter()
-    for op0 in expr_dict.values():
-        for op1 in expr_dict.values():
-            for op2 in expr_dict.values():
-                for op3 in expr_dict.values():
-                    for op4 in expr_dict.values():
-                        for op5 in expr_dict.values():
-                            for op6 in expr_dict.values():
-                                steps += 1
-                                expr = f"(({x} {op0} {y}) {op4} ({x} {op1} {y})) {op6} " \
-                                       f"(({x} {op2} {y}) {op5} ({x} {op3} {y}))"
-                                expr_clean = f"((x {op0} y) {op4} (x {op1} y)) {op6} " \
-                                             f"((x {op2} y) {op5} (x {op3} y))"
-                                try:
-                                    result = eval(expr)
-                                except Exception as _:
-                                    result = None
-                                if result == z:
-                                    # evaluate with other values
-                                    if re_eval(expr_clean, expr_str_orig):
-                                        end = time.perf_counter()
-                                        duration = end - start
-                                        return True, steps, duration, expr
-                                    else:
-                                        continue
-                                else:
-                                    continue
+    for op_comb in product(operation_dict.keys(), repeat=num_ops):
+        steps += 1
+        brute_expr_str = copy(placeholder_str)
+        # replace the placeholder operations accordingly
+        for idx, op in enumerate(op_comb):
+            brute_expr_str = brute_expr_str.replace(f"op{idx}", f"{expr_dict[op]}", 1)
+        
+        try:
+            brute_expr_str_w_vals = copy(brute_expr_str)
+            brute_expr_str_w_vals = brute_expr_str_w_vals.replace("x", f"{x}")
+            brute_expr_str_w_vals = brute_expr_str_w_vals.replace("y", f"{y}")
+            result = eval(brute_expr_str_w_vals)
+        except Exception as _:
+            result = None
+
+        if result == z:
+            # evaluate with other values
+            if re_eval(brute_expr_str, orig_expr_str):
+                end = time.perf_counter()
+                duration = end - start
+                return True, steps, duration, brute_expr_str
+            else: 
+                continue
+        else:
+            continue
+
     end = time.perf_counter()
     duration = end - start
-    return False, steps, duration, expr
+    return False, steps, duration, brute_expr_str
 
 
-def gnn_brute_force_exp(gnn: nn.Sequential, data: Data) -> Tuple[bool, int, float, str]:
+def gnn_brute_force_exp(gnn: nn.Sequential, data: Data, num_ops: int) -> Tuple[bool, int, float, str]:
     """
     Brute force function which utilizes the GNN predicted probabilities for the sinle operations.
     Arguments:
+        gnn: the gnn to predict the operations
         data: graph input data
+        num_ops: number of operations
     Returns:
         Tuple[bool, int, float, str]: solved status, brute force steps and brute force computation time and expr.
     """
+    valid_num_ops = [2**val-1 for val in range(0, num_ops)]
+    assert num_ops in valid_num_ops, "Number of operations must be valid by the term 2^n-1"
+    
     x = data.x_val.item()
     y = data.y_val.item()
-    z = data.z_val.item()
-    expr_str_orig = data.expr_str_orig
+    z = data.z_val
+    orig_expr_str = data.expr_str
 
     steps = 0
     duration = 0.
@@ -77,46 +98,44 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data) -> Tuple[bool, int, floa
 
     ops = []
     topk_ops = torch.topk(prediction, len(expr_dict))
-    for i in range(7):
+    for i in range(len(data.operations)):
         tmp_op = [(item0.item(), item1.item()) for item0, item1 in zip(topk_ops.indices[i],
                 	                                                   torch.exp(topk_ops.values[i]))]
         tmp_op.sort(key=lambda tuple: tuple[1], reverse=True)
         ops.append(tmp_op)
 
+    # iterate over every combination of operations for the whole expression
     start = time.perf_counter()
-    for op0 in ops[0]:
-        for op1 in ops[1]:
-            for op2 in ops[2]:
-                for op3 in ops[3]:
-                    for op4 in ops[4]:
-                        for op5 in ops[5]:
-                            for op6 in ops[6]:
-                                steps += 1
-                                expr = f"(({x} {expr_dict[op0[0]]} {y}) {expr_dict[op4[0]]} " \
-                                       f"({x} {expr_dict[op1[0]]} {y})) {expr_dict[op6[0]]} " \
-                                       f"(({x} {expr_dict[op2[0]]} {y}) {expr_dict[op5[0]]} " \
-                                       f"({x} {expr_dict[op3[0]]} {y}))"
-                                expr_clean = f"((x {expr_dict[op0[0]]} y) {expr_dict[op4[0]]} " \
-                                             f"(x {expr_dict[op1[0]]} y)) {expr_dict[op6[0]]} " \
-                                             f"((x {expr_dict[op2[0]]} y) {expr_dict[op5[0]]} " \
-                                             f"(x {expr_dict[op3[0]]} y))"
-                                try:
-                                    result = eval(expr)
-                                except Exception as _:
-                                    result = None
-                                if result == z:
-                                    # evaluate with other values
-                                    if re_eval(expr_clean, expr_str_orig):
-                                        end = time.perf_counter()
-                                        duration = end - start
-                                        return True, steps, duration, expr
-                                    else: 
-                                        continue
-                                else: 
-                                    continue
+    for op_comb in product(operation_dict.keys(), repeat=num_ops):
+        steps += 1
+        brute_expr_str = copy(data.expr_str)
+        # replace the placeholder operations accordingly
+        for idx, op in enumerate(op_comb):
+            brute_expr_str = brute_expr_str.replace(
+                f"op{idx}", f"{expr_dict[op]}", 1)
+
+        try:
+            brute_expr_str_w_vals = copy(brute_expr_str)
+            brute_expr_str_w_vals = brute_expr_str_w_vals.replace("x", f"{x}")
+            brute_expr_str_w_vals = brute_expr_str_w_vals.replace("y", f"{y}")
+            result = eval(brute_expr_str_w_vals)
+        except Exception as _:
+            result = None
+
+        if result == z:
+            # evaluate with other values
+            if re_eval(brute_expr_str, orig_expr_str):
+                end = time.perf_counter()
+                duration = end - start
+                return True, steps, duration, brute_expr_str
+            else:
+                continue
+        else:
+            continue
+
     end = time.perf_counter()
     duration = end - start
-    return False, steps, duration, expr
+    return False, steps, duration, brute_expr_str
 
 
 def re_eval(expr: str, expr_orig: str) -> bool:
@@ -135,7 +154,7 @@ def re_eval(expr: str, expr_orig: str) -> bool:
 
         z_val = eval(expr_a)
         true_z_val = eval(expr_b)
-        #print(f"{expr_a} = {z_val} || {expr_b} = {true_z_val}")
+        # print(f"{expr_a} = {z_val} || {expr_b} = {true_z_val}")
         if z_val != true_z_val:
             return False
 

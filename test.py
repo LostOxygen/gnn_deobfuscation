@@ -1,7 +1,7 @@
-"""main file to run the lda approximation"""
-# -*- coding: utf-8 -*-
-# !/usr/bin/env python3
-import random
+"""
+main file to run the lda approximation
+"""
+from copy import copy
 import socket
 import datetime
 import argparse
@@ -10,13 +10,22 @@ import torch
 
 from utils.brute_force import brute_force_exp, gnn_brute_force_exp
 from utils.models import GATNetwork
-from utils.datasets import gen_big_expr_data
+from utils.datasets import gen_expr_graph
 
 torch.backends.cudnn.benchmark = True
 
 MODEL_PATH = "./models/gat_model"
 
-def main(gpu: int) -> None:
+expr_dict = {
+    0: "+",
+    1: "-",
+    2: "*",
+    3: "&",
+    4: "|",
+    5: "^"
+}
+
+def main(gpu: int, num_ops: int) -> None:
     """main function for brute force testing"""
     device = "cpu"
     if gpu == -1:
@@ -36,7 +45,7 @@ def main(gpu: int) -> None:
     print("#"*75)
     print()
 
-    tmp_expr_data = next(gen_big_expr_data(testing=False))
+    tmp_expr_data = next(gen_expr_graph(num_operations=num_ops))
     model = GATNetwork(tmp_expr_data.num_features, 16, tmp_expr_data.num_classes).to(device)
     if os.path.isfile(MODEL_PATH):
             model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)
@@ -46,20 +55,27 @@ def main(gpu: int) -> None:
     avg_percent = 0.0
 
     for _ in range(100):
-        expr_data = next(gen_big_expr_data(testing=False))
+        expr_data = next(gen_expr_graph(num_operations=num_ops))
         x = expr_data.x_val.item()
         y = expr_data.y_val.item()
-        z = expr_data.z_val.item()
+        z = expr_data.z_val
+        expr_str = expr_data.expr_str
+
+        expr_str_w_vals = copy(expr_str)
+        expr_str_w_vals = expr_str_w_vals.replace("x", f"{x}")
+        expr_str_w_vals = expr_str_w_vals.replace("y", f"{y}")
 
         print("\n<<< Data >>>")
         print("x:", x)
         print("y:", y)
         print("z:", z)
-        print(f"True expression: {expr_data.expr_str} = {eval(expr_data.expr_str)}")
+        print(f"True expression: {expr_str_w_vals} = {eval(expr_str_w_vals)}")
 
         ### brute force
         print("\n<<< Brute Force >>>")
-        solved, bf_steps, duration, expr = brute_force_exp(x, y, z, expr_data)
+        solved, bf_steps, duration, expr = brute_force_exp(x, y, z, expr_str,
+                                                           expr_data.expr_str_placeholder,
+                                                           len(expr_data.operations))
 
         if solved:
             print(f"Found expression: {expr} = {z}")
@@ -71,7 +87,9 @@ def main(gpu: int) -> None:
 
         # gnn brute force with extra steps
         print("\n<<< GNN Brute Force >>>")
-        gnn_solved, gnn_bf_steps, gnn_duration, gnn_expr = gnn_brute_force_exp(model, expr_data)
+        gnn_solved, gnn_bf_steps, gnn_duration, gnn_expr = gnn_brute_force_exp(model,
+                                                                               expr_data,
+                                                                               len(expr_data.operations))
 
         if gnn_solved:
             print(f"Found expression: {gnn_expr} = {z}")
@@ -93,6 +111,7 @@ def main(gpu: int) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=-1)
+    parser.add_argument("--num_ops", "-n", help="number of operation nodes", type=int, default=15)
     args = parser.parse_args()
     main(**vars(args))
 
