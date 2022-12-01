@@ -168,18 +168,15 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
         for i in range(num_operations):
             operations[i] = torch.randint(0, len(operation_dict), (1,)).item()
 
-        # fill the first stage of interim results according to the input vars and their operations
-        for idx in range(nodes_per_stage[1]):
-            interim_results[idx] = match_op(operations[idx], x_val, y_val)
-        
-        for idx, idi in zip(range(nodes_per_stage[1], len(interim_nodes)), \
-                            range(0, len(interim_nodes), 2)):
-            interim_results[idx] = match_op(operations[idx],
-                                            interim_nodes[idi],
-                                            interim_nodes[idi+1])
+        # replace the operation placeholders with actual operations
+        placeholder_str = expr_str
+        for idx, op in enumerate(operations):
+            expr_str = expr_str.replace(f"op{idx}", f"{expr_dict[op.item()]}", 1)
 
-        z_val = match_op(interim_nodes[-2], interim_nodes[-1], operations[-1])
-        
+        # calculate the resulting value
+        expr_str_w_vals = expr_str.replace("x", f"{x_val.item()}")
+        expr_str_w_vals = expr_str_w_vals.replace("y", f"{y_val.item()}")
+        z_val = eval(expr_str_w_vals)
         # print(f"operation vector: {[operation_dict[i.item()] for i in operations]}")
         # print(f"x_val: {x_val} \ny_val: {y_val}")
         # print(f"interim vector: {interim_results}")
@@ -204,6 +201,7 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
         data.y_val = y_val
         data.z_val = z_val
         data.expr_str = expr_str
+        data.expr_str_placeholder = placeholder_str
         data.operations = operations
 
         yield data
