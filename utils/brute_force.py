@@ -109,7 +109,7 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data, num_ops: int) -> Tuple[b
     start = time.perf_counter()
     for op_comb in product(operation_dict.keys(), repeat=num_ops):
         steps += 1
-        brute_expr_str = copy(data.expr_str)
+        brute_expr_str = copy(data.expr_str_placeholder)
         # replace the placeholder operations accordingly
         for idx, op in enumerate(op_comb):
             brute_expr_str = re.sub(r"\b%s\b" % f"op{idx}",
