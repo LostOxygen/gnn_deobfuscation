@@ -8,7 +8,7 @@ import torch
 from torch import nn
 from torch_geometric.data import Data
 
-from utils.datasets import expr_dict
+from .datasets import expr_dict
 
 operation_dict = {
     0: "add",
