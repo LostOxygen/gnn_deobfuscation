@@ -10,7 +10,7 @@ import torch
 import numpy as np
 
 from utils.training import train_model
-from utils.models import GATNetwork
+from utils.models import GATNetwork, Encoder, Decoder, Graph2Seq
 from utils.datasets import gen_expr_graph
 
 torch.backends.cudnn.benchmark = True
@@ -46,6 +46,12 @@ def main(gpu: int, epochs: int, batch_size: int, lr: float, test: bool, num_ops:
 
     temp_data = next(gen_expr_graph(num_ops))
     model = GATNetwork(temp_data.num_features, 16, temp_data.num_classes).to(device)
+
+    # create encoder decoder model
+    encoder = Encoder(input_dim=temp_data.num_features, hid_dim=512)
+    decoder = Decoder(output_dim=temp_data.num_classes, emb_dim=256, hid_dim=512)
+    model = Graph2Seq(encoder, decoder, device).to(device)
+
     if test:
         if os.path.isfile(MODEL_PATH):
             model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)

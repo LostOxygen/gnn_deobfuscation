@@ -85,8 +85,8 @@ def train_model(model: torch.nn.Module,
             model.train()
 
             data = next(data_gen).to(device)
-            prediction = model(data.x, data.edge_index)
-            loss = loss_fn(prediction[data.train_mask], data.y)
+            prediction = model(data, data.edge_index).squeeze()
+            loss = loss_fn(prediction, data.y)
 
             # Backpropagation
             optimizer.zero_grad()
@@ -109,9 +109,9 @@ def train_model(model: torch.nn.Module,
             # compare predicted operations to true operations
             data = next(data_gen_test).to(device)
             data = data.to(device)
-            prediction = model(data.x, data.edge_index)
+            prediction = model(data, data.edge_index).squeeze()
 
-            predicted_ops = [pred_op.item() for pred_op in prediction[data.test_mask].argmax(dim=-1)]
+            predicted_ops = [pred_op.item() for pred_op in prediction.argmax(dim=-1)]
             true_ops = [int(op.item()) for op in data.y]
 
             for predicted_op, true_op in zip(predicted_ops, true_ops):
