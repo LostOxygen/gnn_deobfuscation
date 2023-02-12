@@ -9,7 +9,7 @@ import os
 import torch
 
 from utils.brute_force import brute_force_exp, gnn_brute_force_exp
-from utils.models import GATNetwork
+from utils.models import GATNetwork, Encoder, Decoder, Graph2Seq
 from utils.datasets import gen_expr_graph
 
 torch.backends.cudnn.benchmark = True
@@ -45,8 +45,12 @@ def main(gpu: int, num_ops: int) -> None:
     print("#"*75)
     print()
 
-    tmp_expr_data = next(gen_expr_graph(num_operations=num_ops))
-    model = GATNetwork(tmp_expr_data.num_features, 16, tmp_expr_data.num_classes).to(device)
+    temp_data = next(gen_expr_graph(num_operations=num_ops))
+    # create encoder decoder model
+    encoder = Encoder(input_dim=temp_data.num_features, hid_dim=512)
+    decoder = Decoder(output_dim=temp_data.num_classes,
+                      emb_dim=256, hid_dim=512)
+    model = Graph2Seq(encoder, decoder, device).to(device)
     if os.path.isfile(MODEL_PATH):
             model_state = torch.load(MODEL_PATH, map_location=lambda storage, loc: storage)
             model.load_state_dict(model_state["model"], strict=True)
@@ -111,7 +115,7 @@ def main(gpu: int, num_ops: int) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpu", "-g", help="GPU", type=int, default=-1)
-    parser.add_argument("--num_ops", "-n", help="number of operation nodes", type=int, default=15)
+    parser.add_argument("--num_ops", "-n", help="number of operation nodes", type=int, default=7)
     args = parser.parse_args()
     main(**vars(args))
 

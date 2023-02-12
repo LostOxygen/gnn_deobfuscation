@@ -95,7 +95,7 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data, num_ops: int) -> Tuple[b
     duration = 0.
 
     with torch.no_grad():
-        prediction = gnn(data.x, data.edge_index)
+        prediction = gnn(data, data.edge_index).squeeze()
 
     ops = []
     topk_ops = torch.topk(prediction, len(expr_dict))

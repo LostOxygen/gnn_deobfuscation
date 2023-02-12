@@ -45,7 +45,6 @@ def main(gpu: int, epochs: int, batch_size: int, lr: float, test: bool, num_ops:
     print()
 
     temp_data = next(gen_expr_graph(num_ops))
-    model = GATNetwork(temp_data.num_features, 16, temp_data.num_classes).to(device)
 
     # create encoder decoder model
     encoder = Encoder(input_dim=temp_data.num_features, hid_dim=512)
@@ -71,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", "-e", help="number of gnn epochs", type=int, default=1000000)
     parser.add_argument("--batch_size", "-bs", help="batch size", type=int, default=1)
     parser.add_argument("--lr", help="learning rate", type=float, default=0.00005)
-    parser.add_argument("--num_ops", help="number of operations", type=int, default=15)
+    parser.add_argument("--num_ops", help="number of operations", type=int, default=7)
     #parser.add_argument("--big", "-b", help="enable big graph", action="store_true", default=True)
     parser.add_argument("--test", "-t", help="test the saved model", action="store_true", default=False)
     #parser.add_argument("--res", "-r", help="remove interim result nodes", action="store_true", default=False)
