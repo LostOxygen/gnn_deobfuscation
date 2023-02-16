@@ -100,7 +100,7 @@ def main(gpu: int, num_ops: int) -> None:
         else:
             print("No expression found")
         print(f"Computation time: {gnn_duration:0.5f} Seconds")
-        print(f"Brute-force steps: {gnn_bf_steps}")
+        print(f"GNN-Brute-force steps: {gnn_bf_steps}")
 
         if gnn_bf_steps < bf_steps:
             gnn_faster += 1

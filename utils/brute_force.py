@@ -99,15 +99,18 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data, num_ops: int) -> Tuple[b
 
     ops = []
     topk_ops = torch.topk(prediction, len(expr_dict))
+
+    # get a list of operations lists, sorted after their probability
     for i in range(len(data.operations)):
         tmp_op = [(item0.item(), item1.item()) for item0, item1 in zip(topk_ops.indices[i],
                 	                                                   torch.exp(topk_ops.values[i]))]
         tmp_op.sort(key=lambda tuple: tuple[1], reverse=True)
-        ops.append(tmp_op)
+        # append the operations without their probs into the list
+        ops.append([op[0] for op in tmp_op])
 
     # iterate over every combination of operations for the whole expression
     start = time.perf_counter()
-    for op_comb in product(operation_dict.keys(), repeat=num_ops):
+    for op_comb in product(*ops):
         steps += 1
         brute_expr_str = copy(data.expr_str_placeholder)
         # replace the placeholder operations accordingly
@@ -115,7 +118,6 @@ def gnn_brute_force_exp(gnn: nn.Sequential, data: Data, num_ops: int) -> Tuple[b
             brute_expr_str = re.sub(r"\b%s\b" % f"op{idx}",
                                     f"{expr_dict[op]}",
                                     brute_expr_str, 1)
-            # brute_expr_str = brute_expr_str.replace(f"op{idx}", f"{expr_dict[op]}", 1)
 
         try:
             brute_expr_str_w_vals = copy(brute_expr_str)

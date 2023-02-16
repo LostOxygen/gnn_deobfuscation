@@ -87,8 +87,7 @@ class Decoder(nn.Module):
         emb_con = torch.cat((embedded, context), dim=2)
         output, hidden = self.rnn(emb_con, hidden)
         # output = [batch size, emb dim + hid dim * 2]
-        output = torch.cat(
-            (embedded.squeeze(0), hidden.squeeze(0), context.squeeze(0)), dim=1)
+        output = torch.cat((embedded.squeeze(0), hidden.squeeze(0), context.squeeze(0)), dim=1)
         # prediction = [batch size, output dim]
         prediction = self.fc_out(output)
 
@@ -118,7 +117,7 @@ class Graph2Seq(nn.Module):
         hidden = context
 
         expr = tgt[0, :]
-        for t in range(1, tgt_len):
+        for t in range(0, tgt_len):
             # expr = [batch_size]
             # hidden = [1, batch_size, hid_dim]
             # context = [1, batch_size, hid_dim]
