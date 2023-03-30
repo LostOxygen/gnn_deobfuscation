@@ -30,7 +30,7 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
     """
     valid_num_ops = [2**val-1 for val in range(0, num_operations)]
     assert num_operations in valid_num_ops, "Number of operations must be valid by the term 2^n-1"
-    
+
     num_input_vars = num_operations + 1
     assert num_input_vars % 2 == 0, "Number of input variables must be even"
     num_nodes = num_input_vars + (2*num_operations)
@@ -46,7 +46,7 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
         nodes_per_stage.append(int(node_counter))
         nodes_per_stage.append(int(node_counter))
         node_counter /= 2
-    
+
     # check how many stages of the graph contain operation nodes
     num_stages_with_ops = 0
     ops_counter = num_operations
@@ -69,23 +69,23 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
                 if len(input_nodes) >= num_input_vars:
                     node_switch = "operation"
                     current_tree_stage += 1
-            
+
             case "operation": 
                 operation_nodes.append(current_node)
                 if len(operation_nodes) >= curr_len_ops+nodes_per_stage[current_tree_stage]:
                     node_switch = "interim"           
                     curr_len_ops = len(operation_nodes)
                     current_tree_stage += 1
-            
+
             case "interim": 
                 interim_nodes.append(current_node)
                 if len(interim_nodes) >= curr_len_inter+nodes_per_stage[current_tree_stage]:
                     node_switch = "operation"
                     curr_len_inter = len(interim_nodes)
                     current_tree_stage += 1
-        
-        current_node += 1        
-        
+
+        current_node += 1
+
     # print("num input variables: ", num_input_vars)
     # print("num total nodes: ", num_nodes)
     # print("nodes per stage: ", nodes_per_stage)
@@ -143,7 +143,7 @@ def gen_expr_graph(num_operations: int) -> Iterator[Data]:
             # generate the merged expression
             estr = "(" + tmp_expr_list[idx] + f" op{num_used_ops+offset_idx} " + \
                 tmp_expr_list[idx+1] + ")"
-            
+
             tmp_list.append(estr)
             offset_idx += 1
 

@@ -1,9 +1,10 @@
-from random import random
+"""
+library module for providing the model architectures.
+"""
 import torch
 from torch import nn
-from torch import Tensor
 import torch.nn.functional as F
-from torch_geometric.nn import SAGEConv, GCNConv, Sequential, GATv2Conv, global_max_pool
+from torch_geometric.nn import GCNConv, GATv2Conv, global_max_pool
 
 
 class GATNetwork(torch.nn.Module):
@@ -35,6 +36,7 @@ class GATNetwork(torch.nn.Module):
 
 
 class Encoder(nn.Module):
+    """Encoder for Graph2Seq model."""
     def __init__(self, input_dim, hid_dim):
         super().__init__()
         self.conv1 = GCNConv(input_dim, hid_dim, improved=True)
@@ -68,6 +70,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
+    """Decoder for Graph2Seq model."""
     def __init__(self, output_dim, emb_dim, hid_dim):
         super().__init__()
         self.output_dim = output_dim
@@ -95,13 +98,14 @@ class Decoder(nn.Module):
 
 
 class Graph2Seq(nn.Module):
+    """Graph2Seq model."""
     def __init__(self, encoder, decoder, device):
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.device = device
 
-    def forward(self, data, teacher_forcing_ratio=0.5):
+    def forward(self, data):
         # tgt = [1, output_dim * batch_size] -> [output_dim, batch_size], float -> long
         # batch_size = num of graphs in this batch
         tgt = torch.reshape(data.y, (1, -1)).t()
